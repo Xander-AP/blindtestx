@@ -220,12 +220,28 @@ h1 span { color: var(--accent); }
 .duelbar { display: flex; flex-direction: column; gap: 8px; }
 .dmeta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; letter-spacing: .04em; }
 #dRoom { color: var(--muted); }
-.vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
-.vs .side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.vs .side.r { text-align: right; align-items: flex-end; }
-.vs .nm { font-weight: 700; overflow-wrap: anywhere; }
-.vs .st { font-size: 13px; color: var(--muted); }
-.vs .pts { font-family: var(--f-mono); font-weight: 600; font-size: 26px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.roster, .lb { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left; }
+.roster li, .lb li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: rgba(21, 26, 53, .75); font-size: 15px; min-width: 0; }
+.roster li.me, .lb li.me { outline: 2px solid var(--accent); }
+.roster .nm, .lb .nm { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.lb .rk { font-family: var(--f-mono); font-weight: 600; min-width: 2.2ch; color: var(--muted); text-align: right; }
+.lb .stt { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.lb .stt.ok { color: var(--ok); }
+.lb .tot { font-family: var(--f-mono); font-weight: 600; min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+.lb li.gone { opacity: .5; }
+.kick { flex: none; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 8px; padding: 4px 9px; font-weight: 700; font-size: 13px; }
+.kick.arm { color: var(--bad); border-color: var(--bad); }
+.chat { gap: 10px; }
+.chathd { display: flex; justify-content: space-between; align-items: center; background: none; border: 0; color: var(--fg); font-family: var(--f-display); font-weight: 400; font-size: 1.15rem; padding: 0; }
+.badge { background: var(--accent); color: var(--on-accent); border-radius: 999px; font: 600 12px var(--f-mono); padding: 2px 8px; font-style: normal; }
+.chatlog { list-style: none; margin: 0 0 8px; padding: 0; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.chatlog li { overflow-wrap: anywhere; }
+.chatlog .who { font-weight: 700; color: var(--accent); }
+.chatlog .sys { color: var(--muted); font-style: italic; }
+.chatform { display: flex; gap: 8px; }
+.chatform .field { padding: 10px 12px; font-size: 16px; }
+.chatform .btn { flex: none; }
+.rnote { margin: 0; color: var(--muted); font-size: 14px; }
 .duelrows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .duelrows li { display: grid; grid-template-columns: minmax(0, 1fr) 4.5ch 4.5ch; gap: 12px; align-items: center; padding: 9px 12px; border-radius: 10px; background: rgba(21, 26, 53, .75); font-size: 14px; }
 .duelrows li.hd { background: none; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-block: 2px; }
@@ -275,7 +291,7 @@ h1 span { color: var(--accent); }
       <button type="button" id="mDaily" aria-pressed="true">Du jour</button>
       <button type="button" id="mFree" aria-pressed="false">Partie libre</button>
       <button type="button" id="mAll" aria-pressed="false">Tout</button>
-      <button type="button" id="mDuel" aria-pressed="false">Duel</button>
+      <button type="button" id="mDuel" aria-pressed="false">Multi</button>
     </div>
     <div class="allbar" id="allbar" hidden>
       <div class="allmeta"><span id="allPos"></span><span id="allScore"></span></div>
@@ -284,11 +300,9 @@ h1 span { color: var(--accent); }
     </div>
     <div class="duelbar" id="duelbar" hidden>
       <div class="dmeta"><span id="dRound"></span><span id="dRoom"></span></div>
-      <div class="vs">
-        <div class="side"><span class="nm" id="dMe"></span><span class="st" id="dMeSt"></span></div>
-        <div class="pts" id="dPts"></div>
-        <div class="side r"><span class="nm" id="dOpp"></span><span class="st" id="dOppSt"></span></div>
-      </div>
+      <ol class="lb" id="lb"></ol>
+      <button type="button" class="linkbtn" id="lbMore" hidden></button>
+      <button type="button" class="linkbtn" id="dLeave">Quitter la salle</button>
     </div>
   </header>
 
@@ -297,19 +311,14 @@ h1 span { color: var(--accent); }
   <p class="notice" id="notice" role="status" hidden></p>
 
   <section class="lobby" id="lobby" hidden>
-    <div class="dcard">
+    <div class="dcard" id="dName">
       <label for="duelName">Ton pseudo</label>
       <input class="field" id="duelName" type="text" maxlength="14" autocomplete="off" spellcheck="false" placeholder="Pseudo">
-      <p class="foot">Chaque manche, vous écoutez le même extrait. Trouvé au 1er essai : 6 points, au 2e : 5, et ainsi de suite jusqu'à 1 point au 6e. Pas trouvé : 0.</p>
+      <p class="foot">Chaque manche, tout le monde écoute le même extrait. Trouvé au 1er essai : 6 points, au 2e : 5, et ainsi de suite jusqu'à 1 point au 6e. Pas trouvé : 0.</p>
     </div>
     <div class="dcard" id="dCreate">
       <h3>Créer une salle</h3>
-      <label>Nombre de manches</label>
-      <div class="pick" id="dRounds" role="group" aria-label="Nombre de manches">
-        <button type="button" data-n="5" aria-pressed="false">5</button>
-        <button type="button" data-n="10" aria-pressed="true">10</button>
-        <button type="button" data-n="20" aria-pressed="false">20</button>
-      </div>
+      <p class="foot">Jusqu'à 25 joueurs. Tu es le chef : tu choisis le nombre de manches, tu lances la partie et tu peux retirer des joueurs. Les joueurs inactifs pendant 2 minutes sont retirés.</p>
       <button type="button" class="btn primary" id="dCreateBtn">Créer la salle</button>
     </div>
     <div class="dcard" id="dJoin">
@@ -322,9 +331,20 @@ h1 span { color: var(--accent); }
       <label>Code de la salle</label>
       <div class="big" id="dRoomCode"></div>
       <div class="wait"><i class="dot"></i><span id="dWait"></span></div>
+      <ul class="roster" id="roster"></ul>
+      <div id="dPickRow" hidden>
+        <label>Nombre de manches</label>
+        <div class="pick" id="dRounds" role="group" aria-label="Nombre de manches">
+          <button type="button" data-n="5" aria-pressed="false">5</button>
+          <button type="button" data-n="10" aria-pressed="true">10</button>
+          <button type="button" data-n="20" aria-pressed="false">20</button>
+        </div>
+      </div>
+      <p class="rnote" id="dGuestInfo" hidden></p>
+      <button type="button" class="btn primary" id="dStart" hidden>Lancer la partie</button>
       <div class="row">
         <button type="button" class="btn" id="dCopy">Copier le lien d'invitation</button>
-        <button type="button" class="btn" id="dCancel">Annuler</button>
+        <button type="button" class="btn" id="dCancel">Quitter la salle</button>
       </div>
     </div>
   </section>
@@ -395,11 +415,24 @@ h1 span { color: var(--accent); }
     <div class="res" id="deRes"></div>
     <h2 id="deScore"></h2>
     <div class="yr" id="deSub"></div>
+    <ol class="lb" id="deRank"></ol>
+    <div class="mh">Ton détail</div>
     <ol class="duelrows" id="deRows"></ol>
     <p class="foot" id="deWait" hidden></p>
     <div class="row">
-      <button type="button" class="btn primary" id="deRematch">Revanche</button>
-      <button type="button" class="btn" id="deLeave">Quitter</button>
+      <button type="button" class="btn primary" id="deBack" hidden>Retour au salon</button>
+      <button type="button" class="btn" id="deLeave">Quitter la salle</button>
+    </div>
+  </section>
+
+  <section class="dcard chat" id="chatBox" hidden>
+    <button type="button" class="chathd" id="chatToggle" aria-expanded="true"><span>Chat</span><i class="badge" id="chatBadge" hidden></i></button>
+    <div id="chatBody">
+      <ul class="chatlog" id="chatLog" aria-live="polite"></ul>
+      <form class="chatform" id="chatForm" autocomplete="off">
+        <input class="field" id="chatIn" type="text" maxlength="200" placeholder="Écrire un message…" enterkeyhint="send">
+        <button type="submit" class="btn primary">Envoyer</button>
+      </form>
     </div>
   </section>
 
@@ -802,7 +835,7 @@ h1 span { color: var(--accent); }
     if (calib) { toast("Cette vidéo n'est pas lisible ici."); return; }
     if (answer) {
       broken[answer.v] = 1; saveBroken();
-      if (mode === "duel") { dVoid(false); return; }
+      if (mode === "duel") { mVoid(); return; }
       setNotice("Une vidéo n'est pas lisible ici, j'en ai pris une autre.", true);
       if (mode === "daily") startDaily();
       else if (mode === "all") dropBrokenAll();
@@ -1047,7 +1080,7 @@ h1 span { color: var(--accent); }
     $("mFree").setAttribute("aria-pressed", String(mode === "free"));
     $("mAll").setAttribute("aria-pressed", String(mode === "all"));
     $("mDuel").setAttribute("aria-pressed", String(mode === "duel"));
-    if (mode === "duel") $("eyebrow").textContent = "Duel 1v1";
+    if (mode === "duel") $("eyebrow").textContent = "Multijoueur";
     $("again").disabled = false;
     renderDuel();
     updatePlayUI();
@@ -1235,285 +1268,495 @@ h1 span { color: var(--accent); }
     loadedV = null; loadVideo(); render();
   }
 
-  /* ----------------- mode Duel : 1v1 en ligne (PeerJS / WebRTC) ---------------- */
-  var D = null, dRounds = 10, dConnT = null;
+  /* ------------- mode Multi : salle en ligne jusqu'à 25 joueurs (PeerJS / WebRTC) ------------- */
+  /* L'hôte (le chef) fait tourner la partie ; chaque joueur est relié à lui seul. */
+  var D = null, dConnT = null;
+  var MAXP = 25, INACT_MS = 120000, WARN_MS = 90000, GAP_MS = 6000;
   var CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   function newCode() {
     var s = "";
     for (var i = 0; i < 5; i++) s += CODE_CHARS.charAt(Math.floor(Math.random() * CODE_CHARS.length));
     return s;
   }
-  function myName() {
-    var n = $("duelName").value.replace(/\s+/g, " ").trim().slice(0, 14) || "Joueur";
-    lsSet("gen-name", n);
-    return n;
-  }
+  function cleanName(n) { return String(n || "").replace(/\s+/g, " ").trim().slice(0, 14) || "Joueur"; }
+  function myName() { var n = cleanName($("duelName").value); lsSet("gen-name", n); return n; }
   function inviteLink() {
     var base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : location.href.split("#")[0];
     return base + "#duel-" + D.code;
   }
-  function dSend(msg) { try { if (D && D.conn && D.conn.open) D.conn.send(msg); } catch (e) { /* ignoré */ } }
-  function dClose() {
+  function dSendTo(conn, msg) { try { if (conn && conn.open) conn.send(msg); } catch (e) { /* ignoré */ } }
+  function dBroadcast(msg) {
+    if (!D || D.role !== "host") return;
+    D.players.forEach(function (p) { if (p.conn) dSendTo(p.conn, msg); });
+  }
+  function findP(id) {
+    if (!D) return null;
+    for (var i = 0; i < D.players.length; i++) if (D.players[i].id === id) return D.players[i];
+    return null;
+  }
+  function pTotal(p) { var t = 0; for (var i = 0; i < p.pts.length; i++) t += p.pts[i] || 0; return t; }
+  function activePlayers() { return D.players.filter(function (p) { return !p.gone; }); }
+
+  function dNewState(role, code, peer) {
+    return { role: role, code: code, peer: peer, conn: null, name: myName(), myId: null, phase: "lobby", total: 10, order: [], r: 0,
+      voided: {}, players: [], inMs: 0, inAt: 0, waiting: false, timer: null, chat: [], chatSeq: 0, chatOpen: true, chatShown: -1, unread: 0,
+      localR: null, meDone: false, kickArm: null, nextId: 1, lbAll: false, lastActSent: 0, ticker: null, watch: null };
+  }
+  function dStartTimers() {
+    D.ticker = setInterval(function () { if (D && D.inMs > 0 && mode === "duel") render(); }, 1000);
+    if (D.role === "host") D.watch = setInterval(hostWatch, 5000);
+  }
+  function dClose(old) {
     clearTimeout(dConnT);
-    if (D) {
-      try { if (D.conn) D.conn.close(); } catch (e) { /* ignoré */ }
-      try { if (D.peer) D.peer.destroy(); } catch (e2) { /* ignoré */ }
-    }
-    D = null;
+    if (!old) return;
+    clearTimeout(old.timer); clearInterval(old.ticker); clearInterval(old.watch);
+    setTimeout(function () {
+      try { if (old.conn) old.conn.close(); } catch (e) { /* ignoré */ }
+      old.players.forEach(function (p) { try { if (p.conn) p.conn.close(); } catch (e) { /* ignoré */ } });
+      try { if (old.peer) old.peer.destroy(); } catch (e2) { /* ignoré */ }
+    }, 400);
+  }
+  function resetLocalGame() {
+    stopPlayback();
+    answer = null; over = false; guesses = []; step = 0; won = false;
   }
   function leaveDuel() {
-    if (D) dSend({ t: "bye" });
-    stopPlayback();
-    dClose();
-    answer = null; over = false; guesses = []; step = 0;
-    $("dRoomBox").hidden = true; $("dCreate").hidden = false; $("dJoin").hidden = false;
+    var old = D;
+    if (old) {
+      if (old.role === "host") dBroadcast({ t: "closed" });
+      else dSendTo(old.conn, { t: "bye" });
+    }
+    D = null;
+    resetLocalGame();
+    dClose(old);
+  }
+  function dEnd(msg) {   // sortie subie : kick, salle fermée, erreur
+    if (msg) toast(msg);
+    var old = D; D = null;
+    resetLocalGame();
+    dClose(old);
+    render();
   }
   function enterDuel() {
     mode = "duel";
     stopPlayback(); setNotice("");
-    if (!D) { $("dRoomBox").hidden = true; $("dCreate").hidden = false; $("dJoin").hidden = false; }
     render();
   }
-  function dFail(msg) {
-    toast(msg);
-    stopPlayback();
-    dClose();
-    $("dRoomBox").hidden = true; $("dCreate").hidden = false; $("dJoin").hidden = false;
+
+  /* ---- chat ---- */
+  function addChat(m) {
+    if (!D || !m) return;
+    D.chat.push(m);
+    if (D.chat.length > 80) D.chat.shift();
+    if (!D.chatOpen && !m.sys) D.unread++;
     render();
   }
-  function dNewState(role, code, peer) {
-    return { role: role, code: code, peer: peer, conn: null, name: myName(), oppName: "", total: 10, order: [], r: 0,
-      rows: [], phase: "lobby", meDone: false, meReady: false, oppReady: false, meRematch: false, oppRematch: false, gone: false };
+  function sysChat(text) {
+    if (!D || D.role !== "host") return;
+    var m = { id: ++D.chatSeq, sys: true, text: text };
+    dBroadcast({ t: "chat", m: m });
+    addChat(m);
   }
-  function dBind(conn) {
-    D.conn = conn;
-    conn.on("data", dOnData);
-    conn.on("close", function () { if (D && D.conn === conn) dOppGone(); });
-    conn.on("error", function () { if (D && D.conn === conn) dOppGone(); });
+  function hostChat(p, text) {
+    text = String(text || "").replace(/\s+/g, " ").trim().slice(0, 200);
+    if (!text) return;
+    var t = Date.now();
+    if (t - (p.lastChat || 0) < 700) return;
+    p.lastChat = t;
+    var m = { id: ++D.chatSeq, pid: p.id, n: p.name, text: text };
+    dBroadcast({ t: "chat", m: m });
+    addChat(m);
   }
-  function dOppGone() {
-    if (!D || D.gone) return;
-    D.gone = true;
-    if (D.phase === "lobby") { dFail("L'adversaire s'est déconnecté."); return; }
-    stopPlayback();
-    D.phase = "final";
-    toast("L'adversaire a quitté la partie.");
+  function sendChat(text) {
+    if (!D || !D.myId) return;
+    if (D.role === "host") hostChat(findP(D.myId), text);
+    else dSendTo(D.conn, { t: "chat", text: text });
+  }
+
+  /* ---- côté hôte ---- */
+  function snap() {
+    return { t: "st", phase: D.phase, total: D.total, order: D.phase === "lobby" ? [] : D.order, r: D.r, vd: D.voided, inMs: D.inMs,
+      players: D.players.map(function (p) { return { id: p.id, name: p.name, pts: p.pts, done: p.done, gone: p.gone, host: !!p.host }; }) };
+  }
+  function hostPush() { dBroadcast(snap()); syncLocal(); }
+  function closeLater(conn) { setTimeout(function () { try { conn.close(); } catch (e) { /* ignoré */ } }, 300); }
+  function hostJoin(conn, m) {
+    if (m.sig !== SIG) { dSendTo(conn, { t: "bad" }); closeLater(conn); return; }
+    if (D.phase === "play") { dSendTo(conn, { t: "busy" }); closeLater(conn); return; }
+    if (activePlayers().length >= MAXP) { dSendTo(conn, { t: "full" }); closeLater(conn); return; }
+    var base = cleanName(m.name), name = base, k = 1;
+    function taken(n) { return D.players.some(function (p) { return !p.gone && p.name.toLowerCase() === n.toLowerCase(); }); }
+    while (taken(name)) { k++; name = base.slice(0, 10) + " (" + k + ")"; }
+    var p = { id: "p" + (D.nextId++), name: name, pts: [], done: false, gone: false, host: false, conn: conn, last: Date.now(), warned: false };
+    conn.pid = p.id;
+    D.players.push(p);
+    dSendTo(conn, { t: "welcome", you: p.id, chat: D.chat.slice(-30) });
+    sysChat(name + " a rejoint la salle.");
+    hostPush();
+  }
+  function hostOnData(conn, m) {
+    if (!D || D.role !== "host" || !m || typeof m !== "object") return;
+    var p = conn.pid ? findP(conn.pid) : null;
+    if (!p) { if (m.t === "hello") hostJoin(conn, m); return; }
+    if (p.gone) return;
+    p.last = Date.now(); p.warned = false;
+    if (m.t === "done") hostDone(p, m.r, m.p);
+    else if (m.t === "chat") hostChat(p, m.text);
+    else if (m.t === "void") hostVoid(m.r);
+    else if (m.t === "bye") hostRemove(p, null);
+  }
+  function hostRemove(p, how) {   // how : null (parti), "kick" (retiré par l'hôte), "inactivité"
+    if (!D || !p || p.gone) return;
+    var conn = p.conn; p.conn = null;
+    if (conn) {
+      if (how) dSendTo(conn, { t: "kick", why: how === "kick" ? "par l'hôte" : how });
+      closeLater(conn);
+    }
+    if (D.phase === "lobby") D.players = D.players.filter(function (x) { return x !== p; });
+    else { p.gone = true; p.done = true; }
+    sysChat(p.name + (how === "kick" ? " a été retiré par l'hôte." : how ? " a été retiré (" + how + ")." : " a quitté la salle."));
+    if (D.phase === "play") checkAllDone();
+    hostPush();
+  }
+  function hostWatch() {
+    if (!D || D.role !== "host") return;
+    var t = Date.now();
+    D.players.slice().forEach(function (p) {
+      if (p.host || p.gone) return;
+      var idle = t - p.last;
+      if (idle > INACT_MS) hostRemove(p, "inactivité");
+      else if (idle > WARN_MS && !p.warned) { p.warned = true; dSendTo(p.conn, { t: "warn" }); }
+    });
+  }
+  function hostSetTotal(n) { if (D && D.role === "host" && D.phase === "lobby") { D.total = n; hostPush(); } }
+  function hostStart() {
+    if (!D || D.role !== "host" || D.phase !== "lobby") return;
+    if (activePlayers().length < 2) { toast("Il faut au moins 2 joueurs."); return; }
+    var ids = DATA.filter(function (d) { return !broken[d.v]; }).map(function (d) { return d.v; });
+    D.order = shuffle(ids).slice(0, D.total);
+    D.r = 0; D.voided = {}; D.waiting = false; D.inMs = 0;
+    D.players.forEach(function (p) { p.pts = []; p.done = false; });
+    D.phase = "play"; D.localR = null; D.chatOpen = false;
+    sysChat("C'est parti !");
+    hostPush();
+  }
+  function hostBack() {
+    if (!D || D.role !== "host" || D.phase !== "final") return;
+    clearTimeout(D.timer);
+    D.players = D.players.filter(function (p) { return !p.gone; });
+    D.players.forEach(function (p) { p.pts = []; p.done = false; });
+    D.phase = "lobby"; D.order = []; D.r = 0; D.voided = {}; D.waiting = false; D.inMs = 0; D.chatOpen = true; D.unread = 0;
+    hostPush();
+  }
+  function hostDone(p, r, pt) {
+    if (D.phase !== "play" || r !== D.r || p.done) return;
+    p.pts[r] = Math.max(0, Math.min(STEPS.length, pt | 0));
+    p.done = true;
+    checkAllDone();
+    hostPush();
+  }
+  function checkAllDone() {
+    if (D.phase !== "play" || D.waiting) return;
+    var act = activePlayers();
+    if (act.length < 2) { hostFinish(); return; }
+    if (act.every(function (p) { return p.done; })) hostGap(GAP_MS);
+  }
+  function hostGap(ms) {
+    D.waiting = true; D.inMs = ms; D.inAt = Date.now();
+    clearTimeout(D.timer);
+    D.timer = setTimeout(hostAdvance, ms);
+  }
+  function hostFinish() {
+    clearTimeout(D.timer);
+    D.phase = "final"; D.waiting = false; D.inMs = 0;
+  }
+  function hostAdvance() {
+    if (!D || D.role !== "host" || D.phase !== "play") return;
+    D.waiting = false; D.inMs = 0;
+    if (D.r + 1 >= D.order.length) hostFinish();
+    else {
+      D.r++;
+      D.players.forEach(function (p) { p.done = p.gone; });
+    }
+    hostPush();
+  }
+  function hostVoid(r) {   // vidéo illisible chez quelqu'un : manche annulée pour tous
+    if (!D || D.phase !== "play" || r !== D.r || D.voided[r]) return;
+    D.voided[r] = true;
+    D.players.forEach(function (p) { p.pts[r] = 0; p.done = true; });
+    sysChat("Vidéo illisible : manche annulée.");
+    hostGap(1500);
+    hostPush();
+  }
+  function mVoid() {
+    if (!D || D.phase !== "play") return;
+    if (D.role === "host") hostVoid(D.r); else dSendTo(D.conn, { t: "void", r: D.r });
+  }
+
+  /* ---- côté joueur ---- */
+  function applySnap(m) {
+    if (!D || D.role !== "guest") return;
+    if (m.phase !== "lobby" && !(m.order || []).every(function (v) { return BYV[v]; })) { dEnd("Vous n'avez pas la même version du jeu."); return; }
+    D.phase = m.phase; D.total = m.total; D.order = m.order || []; D.r = m.r; D.voided = m.vd || {};
+    D.players = m.players; D.inMs = m.inMs || 0; D.inAt = Date.now();
+    syncLocal();
+  }
+  function guestOnData(m) {
+    if (!D || D.role !== "guest" || !m || typeof m !== "object") return;
+    if (m.t === "welcome") { clearTimeout(dConnT); D.myId = m.you; D.chat = m.chat || []; render(); }
+    else if (m.t === "st") applySnap(m);
+    else if (m.t === "chat") addChat(m.m);
+    else if (m.t === "warn") toast("Sans activité, tu seras retiré de la salle dans 30 s.");
+    else if (m.t === "kick") dEnd("Tu as été retiré de la salle (" + (m.why || "") + ").");
+    else if (m.t === "closed") dEnd("L'hôte a fermé la salle.");
+    else if (m.t === "bad") dEnd("Vous n'avez pas la même version du jeu.");
+    else if (m.t === "busy") dEnd("Une partie est déjà en cours dans cette salle.");
+    else if (m.t === "full") dEnd("La salle est pleine (25 joueurs).");
+  }
+  function syncLocal() {   // aligne l'écran de jeu sur l'état de la salle
+    if (!D) return;
+    if (D.phase === "play") {
+      if (D.localR !== D.r) {
+        D.localR = D.r; D.meDone = false;
+        var e = BYV[D.order[D.r]];
+        if (e) { beginRound(e); return; }
+      }
+    } else if (D.localR !== null) {
+      D.localR = null;
+      resetLocalGame();
+    }
     render();
   }
+  function duelSync() {   // appelé après chaque essai
+    if (!D || D.phase !== "play" || !over || D.meDone || D.localR !== D.r) return;
+    D.meDone = true;
+    var pt = won ? STEPS.length + 1 - guesses.length : 0;
+    var me = findP(D.myId);
+    if (me) { me.pts[D.r] = pt; me.done = true; }
+    if (D.role === "host") hostDone(me, D.r, pt);
+    else dSendTo(D.conn, { t: "done", r: D.r, p: pt });
+  }
+  function noteActivity() {
+    if (!D || D.role !== "guest" || !D.myId) return;
+    var t = Date.now();
+    if (t - D.lastActSent > 8000) { D.lastActSent = t; dSendTo(D.conn, { t: "act" }); }
+  }
+
+  /* ---- création / connexion ---- */
+  function needPeer() {
+    if (typeof window.Peer === "function") return false;
+    toast("Le mode Multi a besoin de la bibliothèque PeerJS (connexion internet).");
+    return true;
+  }
+  function dFail(msg) { dEnd(msg); }
   function dCreate() {
-    if (typeof window.Peer !== "function") { toast("Le mode Duel a besoin de la bibliothèque PeerJS (connexion internet)."); return; }
+    if (needPeer()) return;
     var attempts = 0;
     function open() {
       var code = newCode(), peer;
       try { peer = new window.Peer("generique-" + code); } catch (e) { toast("Impossible de créer la salle."); return; }
       D = dNewState("host", code, peer);
-      D.total = dRounds;
-      $("dCreate").hidden = true; $("dJoin").hidden = true; $("dRoomBox").hidden = false;
-      $("dRoomCode").textContent = "·····";
-      $("dWait").textContent = "Création de la salle…";
-      peer.on("open", function () {
-        if (!D || D.peer !== peer) return;
-        $("dRoomCode").textContent = code;
-        $("dWait").textContent = "En attente d'un adversaire…";
-      });
+      dStartTimers();
+      var me = { id: "p0", name: D.name, pts: [], done: false, gone: false, host: true, conn: null, last: Date.now() };
+      D.players.push(me);
+      peer.on("open", function () { if (D && D.peer === peer) { D.myId = "p0"; render(); } });
       peer.on("connection", function (conn) {
-        if (!D || D.peer !== peer || D.conn) { try { conn.close(); } catch (e) { /* ignoré */ } return; }
-        dBind(conn);
-        $("dWait").textContent = "Adversaire connecté…";
+        conn.on("data", function (m) { if (D && D.peer === peer) hostOnData(conn, m); });
+        var gone = function () { if (D && D.peer === peer && conn.pid) hostRemove(findP(conn.pid), null); };
+        conn.on("close", gone); conn.on("error", gone);
       });
       peer.on("error", function (err) {
         if (!D || D.peer !== peer) return;
-        if (err && err.type === "unavailable-id" && attempts++ < 5) { try { peer.destroy(); } catch (e) { /* ignoré */ } D = null; open(); return; }
-        if (D.phase === "lobby") dFail("Connexion impossible (" + ((err && err.type) || "erreur") + ").");
+        if (err && err.type === "unavailable-id" && attempts++ < 5) { var old = D; D = null; dClose(old); open(); return; }
+        if (!D.myId) dFail("Connexion impossible (" + ((err && err.type) || "erreur") + ").");
       });
       peer.on("disconnected", function () { try { if (D && D.peer === peer && !peer.destroyed) peer.reconnect(); } catch (e) { /* ignoré */ } });
+      render();
     }
     open();
-    render();
   }
   function dJoin() {
     var code = $("dCode").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (code.length !== 5) { toast("Le code fait 5 caractères."); return; }
-    if (typeof window.Peer !== "function") { toast("Le mode Duel a besoin de la bibliothèque PeerJS (connexion internet)."); return; }
+    if (needPeer()) return;
     var peer;
     try { peer = new window.Peer(); } catch (e) { toast("Impossible de se connecter."); return; }
     D = dNewState("guest", code, peer);
-    $("dCreate").hidden = true; $("dJoin").hidden = true; $("dRoomBox").hidden = false;
-    $("dRoomCode").textContent = code;
-    $("dWait").textContent = "Connexion à la salle…";
+    dStartTimers();
     peer.on("open", function () {
       if (!D || D.peer !== peer) return;
       var conn = peer.connect("generique-" + code, { reliable: true });
-      dBind(conn);
-      conn.on("open", function () { if (D && D.conn === conn) dSend({ t: "hello", name: D.name, sig: SIG }); });
+      D.conn = conn;
+      conn.on("data", guestOnData);
+      conn.on("open", function () { if (D && D.conn === conn) dSendTo(conn, { t: "hello", name: D.name, sig: SIG }); });
+      var lost = function () { if (D && D.conn === conn) dEnd(D.myId ? "La connexion avec la salle est perdue." : "Salle introuvable ou injoignable."); };
+      conn.on("close", lost); conn.on("error", lost);
       clearTimeout(dConnT);
-      dConnT = setTimeout(function () { if (D && D.phase === "lobby" && !D.gotStart) dFail("Salle introuvable ou injoignable."); }, 15000);
+      dConnT = setTimeout(function () { if (D && !D.myId) dFail("Salle introuvable ou injoignable."); }, 15000);
     });
     peer.on("error", function (err) {
-      if (!D || D.peer !== peer) return;
-      if (D.phase !== "lobby") return;
+      if (!D || D.peer !== peer || D.myId) return;
       dFail(err && err.type === "peer-unavailable" ? "Salle introuvable : vérifie le code." : "Connexion impossible (" + ((err && err.type) || "erreur") + ").");
     });
     render();
   }
-  function dOnData(m) {
-    if (!D || !m || typeof m !== "object") return;
-    if (m.t === "hello" && D.role === "host") {
-      if (m.sig !== SIG) { dSend({ t: "bad" }); dFail("L'adversaire n'a pas la même version du jeu."); return; }
-      D.oppName = String(m.name || "Joueur").slice(0, 14);
-      dHostStart();
-    } else if (m.t === "bad") {
-      dFail("Vous n'avez pas la même version du jeu.");
-    } else if (m.t === "start" && D.role === "guest") {
-      if (m.sig !== SIG || !Array.isArray(m.order) || !m.order.every(function (v) { return BYV[v]; })) { dFail("Vous n'avez pas la même version du jeu."); return; }
-      clearTimeout(dConnT);
-      D.gotStart = true;
-      D.oppName = String(m.name || "Joueur").slice(0, 14);
-      D.order = m.order; D.total = m.order.length;
-      dBegin();
-    } else if (m.t === "done" && m.r === D.r && D.rows[D.r]) {
-      D.rows[D.r].opp = Math.max(0, Math.min(6, m.p | 0));
-      render();
-    } else if (m.t === "next" && m.r === D.r) {
-      D.oppReady = true; dTryAdvance();
-    } else if (m.t === "void" && m.r === D.r) {
-      dVoid(true);
-    } else if (m.t === "rematch") {
-      D.oppRematch = true; dTryRematch(); render();
-    } else if (m.t === "bye") {
-      dOppGone();
-    }
+
+  /* ---- rendu ---- */
+  function kickBtn(p) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "kick" + (D.kickArm === p.id ? " arm" : "");
+    b.textContent = D.kickArm === p.id ? "Virer ?" : "✕";
+    b.setAttribute("aria-label", "Retirer " + p.name);
+    b.addEventListener("click", function () {
+      if (D.kickArm === p.id) { D.kickArm = null; hostRemove(p, "kick"); return; }
+      D.kickArm = p.id; render();
+      setTimeout(function () { if (D && D.kickArm === p.id) { D.kickArm = null; render(); } }, 3000);
+    });
+    return b;
   }
-  function dHostStart() {
-    var ids = DATA.filter(function (d) { return !broken[d.v]; }).map(function (d) { return d.v; });
-    D.order = shuffle(ids).slice(0, D.total);
-    dSend({ t: "start", name: D.name, sig: SIG, order: D.order });
-    dBegin();
+  function nameText(p) { return (p.host ? "👑 " : "") + p.name + (D && p.id === D.myId ? " (toi)" : ""); }
+  function renderRoster() {
+    var ul = $("roster"); ul.innerHTML = "";
+    var iAmHost = D.role === "host";
+    D.players.forEach(function (p) {
+      var li = document.createElement("li");
+      if (p.id === D.myId) li.className = "me";
+      var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = nameText(p);
+      li.appendChild(nm);
+      if (iAmHost && !p.host) li.appendChild(kickBtn(p));
+      ul.appendChild(li);
+    });
   }
-  function dBegin() {
-    D.r = 0; D.rows = []; D.phase = "play";
-    D.meRematch = false; D.oppRematch = false;
-    dRound();
+  function ranked() {
+    var list = D.players.map(function (p, i) { return { p: p, i: i, t: pTotal(p) }; });
+    list.sort(function (a, b) { return b.t - a.t || a.i - b.i; });
+    var rk = 0;
+    list.forEach(function (x, k) { if (k === 0 || x.t !== list[k - 1].t) rk = k + 1; x.rank = rk; });
+    return list;
   }
-  function dRound() {
-    D.meDone = false; D.meReady = false; D.oppReady = false;
-    D.rows[D.r] = { v: D.order[D.r], me: null, opp: null };
-    $("dRoomBox").hidden = true;
-    beginRound(BYV[D.order[D.r]]);
+  function renderLB(ul, limit, inGame) {
+    ul.innerHTML = "";
+    var list = ranked();
+    var shown = list.filter(function (x, k) { return !limit || k < limit || x.p.id === D.myId; });
+    shown.forEach(function (x) {
+      var p = x.p, li = document.createElement("li");
+      li.className = (p.id === D.myId ? "me " : "") + (p.gone ? "gone" : "");
+      var rk = document.createElement("span"); rk.className = "rk"; rk.textContent = x.rank;
+      var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = nameText(p);
+      var st = document.createElement("span"); st.className = "stt";
+      if (p.gone) st.textContent = "parti";
+      else if (inGame) { st.textContent = p.done ? "+" + (p.pts[D.r] || 0) : "…"; if (p.done) st.className += " ok"; }
+      var tot = document.createElement("span"); tot.className = "tot"; tot.textContent = x.t;
+      li.appendChild(rk); li.appendChild(nm); li.appendChild(st); li.appendChild(tot);
+      if (D.role === "host" && !p.host && !p.gone) li.appendChild(kickBtn(p));
+      ul.appendChild(li);
+    });
+    return list.length;
   }
-  function dTotals() {
-    var a = 0, b = 0;
-    D.rows.forEach(function (r) { a += r.me || 0; b += r.opp || 0; });
-    return [a, b];
-  }
-  function duelSync() {   // appelé après chaque essai
-    if (!D || D.phase !== "play" || !over || D.meDone) return;
-    D.meDone = true;
-    var p = won ? STEPS.length + 1 - guesses.length : 0;
-    D.rows[D.r].me = p;
-    dSend({ t: "done", r: D.r, p: p });
-  }
-  function dTryAdvance() {
-    if (!D || D.phase !== "play" || !D.meReady || !D.oppReady) return;
-    stopPlayback();
-    if (D.r + 1 >= D.order.length) { D.phase = "final"; render(); return; }
-    D.r++;
-    dRound();
-  }
-  function duelNext() {
-    if (!D || !D.meDone || D.meReady) return;
-    D.meReady = true;
-    dSend({ t: "next", r: D.r });
-    dTryAdvance();
-    render();
-  }
-  function dVoid(fromPeer) {   // vidéo illisible : la manche est annulée pour les deux
-    if (!D || D.phase !== "play") return;
-    if (!fromPeer) dSend({ t: "void", r: D.r });
-    toast("Vidéo illisible : manche annulée.");
-    D.rows[D.r].me = 0; D.rows[D.r].opp = 0; D.rows[D.r].void = true;
-    D.meDone = true; D.meReady = true; D.oppReady = true;
-    dTryAdvance();
-  }
-  function dTryRematch() {
-    if (!D || D.gone || !D.meRematch || !D.oppRematch) return;
-    if (D.role === "host") dHostStart();
-  }
-  function duelRematch() {
-    if (!D || D.gone || D.meRematch) return;
-    D.meRematch = true;
-    dSend({ t: "rematch" });
-    dTryRematch();
-    render();
+  function renderChat() {
+    var last = D.chat.length ? D.chat[D.chat.length - 1].id : 0;
+    $("chatBody").hidden = !D.chatOpen;
+    $("chatToggle").setAttribute("aria-expanded", String(D.chatOpen));
+    if (D.chatOpen) D.unread = 0;
+    $("chatBadge").hidden = !D.unread;
+    $("chatBadge").textContent = D.unread;
+    if (D.chatShown === last + ":" + D.chat.length + ":" + D.chatOpen) return;
+    D.chatShown = last + ":" + D.chat.length + ":" + D.chatOpen;
+    var ul = $("chatLog"); ul.innerHTML = "";
+    D.chat.forEach(function (m) {
+      var li = document.createElement("li");
+      if (m.sys) { li.className = "sys"; li.textContent = m.text; }
+      else {
+        var w = document.createElement("span"); w.className = "who"; w.textContent = m.n + " : ";
+        li.appendChild(w); li.appendChild(document.createTextNode(m.text));
+      }
+      ul.appendChild(li);
+    });
+    ul.scrollTop = ul.scrollHeight;
   }
   function renderDuel() {
     var dl = mode === "duel";
-    var lobbyShow = dl && (!D || D.phase === "lobby");
-    var playing = dl && !!D && D.phase === "play";
-    var fin = dl && !!D && D.phase === "final";
+    var inRoom = dl && !!D && !!D.myId;
+    var lobbyShow = dl && (!D || !D.myId || D.phase === "lobby");
+    var playing = inRoom && D.phase === "play";
+    var fin = inRoom && D.phase === "final";
     $("lobby").hidden = !lobbyShow;
     $("duelbar").hidden = !(playing || fin);
     $("duelEnd").hidden = !fin;
-    $("share").hidden = dl;
-    $("ytlink").hidden = false;
-    if (lobbyShow || fin) { $("tv").hidden = true; $("history").hidden = true; $("guessForm").hidden = true; $("end").hidden = true; }
+    $("chatBox").hidden = !inRoom;
+    $("share").hidden = dl; $("again").hidden = dl;
     $("duelNote").hidden = true;
+    if (lobbyShow || fin) { $("tv").hidden = true; $("history").hidden = true; $("guessForm").hidden = true; $("end").hidden = true; }
+    if (!dl) return;
+    if (inRoom) renderChat();
     if (lobbyShow) {
-      if (D) {
-        $("dRoomBox").hidden = false;
-        $("dCreate").hidden = true; $("dJoin").hidden = true;
+      var inD = !!D;
+      $("dName").hidden = inD; $("dCreate").hidden = inD; $("dJoin").hidden = inD;
+      $("dRoomBox").hidden = !inD;
+      if (inD) {
+        var host = D.role === "host";
         $("dRoomCode").textContent = D.code;
-        $("dCopy").hidden = D.role !== "host";
+        var n = activePlayers().length;
+        $("dWait").textContent = !D.myId ? "Connexion à la salle…" : n + " joueur" + (n > 1 ? "s" : "") + " dans la salle (25 max)";
+        renderRoster();
+        $("dPickRow").hidden = !(host && D.myId);
+        Array.prototype.forEach.call($("dRounds").children, function (x) { x.setAttribute("aria-pressed", String(+x.getAttribute("data-n") === D.total)); });
+        $("dStart").hidden = !(host && D.myId);
+        $("dStart").disabled = n < 2;
+        $("dStart").textContent = n < 2 ? "Lancer (il faut 2 joueurs)" : "Lancer la partie · " + D.total + " manches";
+        $("dGuestInfo").hidden = host || !D.myId;
+        $("dGuestInfo").textContent = "L'hôte lance la partie · " + D.total + " manches.";
+        $("dCopy").hidden = !D.myId;
       }
       return;
     }
-    if (!(playing || fin)) return;
-    var t = dTotals(), row = D.rows[D.r] || {};
-    $("dRound").textContent = fin ? "Terminé" : "Manche " + (D.r + 1) + " / " + D.order.length;
+    if (!inRoom) return;
     $("dRoom").textContent = "Salle " + D.code;
-    $("dMe").textContent = D.name;
-    $("dOpp").textContent = D.oppName;
-    $("dPts").textContent = t[0] + " – " + t[1];
-    function st(p, done) { return !done ? "" : p > 0 ? "Trouvé · +" + p : "Raté"; }
     if (playing) {
-      $("dMeSt").textContent = D.meDone ? st(row.me, true) : "Écoute…";
-      $("dOppSt").textContent = row.opp !== null && row.opp !== undefined ? st(row.opp, true) : "Cherche…";
+      $("dRound").textContent = "Manche " + (D.r + 1) + " / " + D.order.length;
+      var total = renderLB($("lb"), D.lbAll ? 0 : 5, true);
+      $("lbMore").hidden = total <= 6;
+      $("lbMore").textContent = D.lbAll ? "Réduire le classement" : "Voir les " + total + " joueurs";
       if (over) {
-        $("again").textContent = D.meReady ? "En attente…" : D.r + 1 >= D.order.length ? "Résultats" : "Suivant →";
-        $("again").disabled = D.meReady;
-        var n = $("duelNote");
-        n.hidden = false;
-        n.textContent = D.meReady ? "En attente de " + D.oppName + "…" : row.opp === null || row.opp === undefined ? D.oppName + " cherche encore. Tu peux passer à la suite, la manche se lance quand vous êtes prêts." : "";
-        if (!n.textContent) n.hidden = true;
+        var act = activePlayers(), k = act.filter(function (p) { return p.done; }).length;
+        var left = Math.max(0, Math.ceil((D.inMs - (Date.now() - D.inAt)) / 1000));
+        var nt = $("duelNote");
+        nt.hidden = false;
+        nt.textContent = D.inMs > 0 ? "Manche suivante dans " + left + " s" : "En attente des autres joueurs (" + k + " / " + act.length + ")…";
       }
     } else {
-      $("dMeSt").textContent = ""; $("dOppSt").textContent = D.gone ? "A quitté" : "";
-      var win = t[0] > t[1], tie = t[0] === t[1];
+      $("dRound").textContent = "Terminé";
+      $("lbMore").hidden = true;
+      var list = renderLB($("lb"), 5, false);
+      var all = renderLB($("deRank"), 0, false);
+      var rk = ranked(), me = rk.filter(function (x) { return x.p.id === D.myId; })[0];
       var res = $("deRes");
-      res.className = "res " + (win ? "ok" : tie ? "" : "ko");
-      res.textContent = D.gone && D.rows.length < D.order.length ? "Partie interrompue" : win ? "Victoire" : tie ? "Égalité" : "Défaite";
-      $("deScore").textContent = t[0] + " – " + t[1];
-      $("deSub").textContent = D.name + " contre " + D.oppName + (D.gone ? " · l'adversaire a quitté" : "");
-      var ul = $("deRows");
-      ul.innerHTML = "";
+      var champ = me && me.rank === 1;
+      res.className = "res " + (champ ? "ok" : "");
+      res.textContent = !me ? "Partie terminée" : champ ? "Victoire" : me.rank + "e sur " + rk.length;
+      $("deScore").textContent = me ? me.t + " pts" : "";
+      $("deSub").textContent = rk.length + " joueur" + (rk.length > 1 ? "s" : "") + " · salle " + D.code;
+      var ul = $("deRows"); ul.innerHTML = "";
+      var meP = findP(D.myId);
       var hd = document.createElement("li"); hd.className = "hd";
-      [["Générique", "t"], ["Toi", "p"], ["Adv.", "p"]].forEach(function (c) {
+      [["Générique", "t"], ["Toi", "p"], ["Max", "p"]].forEach(function (c) {
         var s = document.createElement("span"); s.className = c[1]; s.textContent = c[0]; hd.appendChild(s);
       });
       ul.appendChild(hd);
-      D.rows.forEach(function (r) {
-        if (r.me === null && r.opp === null) return;
+      D.order.forEach(function (v, i) {
+        var mine = meP && meP.pts[i] !== undefined && meP.pts[i] !== null ? meP.pts[i] : null;
+        var best = 0; D.players.forEach(function (p) { if ((p.pts[i] || 0) > best) best = p.pts[i]; });
         var li = document.createElement("li");
-        var a = document.createElement("span"); a.className = "t"; a.textContent = r.void ? (BYV[r.v] ? BYV[r.v].n : r.v) + " (annulée)" : BYV[r.v] ? BYV[r.v].n : r.v;
-        var b = document.createElement("span"); b.className = "p" + (r.me > r.opp ? " win" : ""); b.textContent = r.me === null ? "–" : r.me;
-        var c = document.createElement("span"); c.className = "p" + (r.opp > r.me ? " win" : ""); c.textContent = r.opp === null ? "–" : r.opp;
+        var a = document.createElement("span"); a.className = "t"; a.textContent = (BYV[v] ? BYV[v].n : v) + (D.voided[i] ? " (annulée)" : "");
+        var b = document.createElement("span"); b.className = "p" + (mine !== null && mine === best && best > 0 ? " win" : ""); b.textContent = mine === null ? "–" : mine;
+        var c = document.createElement("span"); c.className = "p"; c.textContent = best;
         li.appendChild(a); li.appendChild(b); li.appendChild(c);
         ul.appendChild(li);
       });
-      var rb = $("deRematch");
-      rb.hidden = D.gone;
-      rb.disabled = D.meRematch;
-      rb.textContent = D.meRematch ? "En attente de " + D.oppName + "…" : D.oppRematch ? "Accepter la revanche" : "Revanche";
+      var host2 = D.role === "host";
+      $("deBack").hidden = !host2;
+      $("deWait").hidden = host2;
+      $("deWait").textContent = "En attente de l'hôte…";
     }
   }
 
@@ -1545,7 +1788,6 @@ h1 span { color: var(--accent); }
   $("share").addEventListener("click", function () { copyText(shareText()); });
   $("again").addEventListener("click", function () {
     if (mode === "all") { nextAll(); return; }
-    if (mode === "duel") { duelNext(); return; }
     mode = "free"; renderEras(); startFree();
   });
   function leaveTo(m, fn) { return function () { if (mode === m) return; if (mode === "duel") leaveDuel(); mode = m; fn(); }; }
@@ -1553,17 +1795,27 @@ h1 span { color: var(--accent); }
   $("mDuel").addEventListener("click", function () { if (mode !== "duel") enterDuel(); });
   $("dRounds").addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest("button") : null;
-    if (!b) return;
-    dRounds = +b.getAttribute("data-n");
-    Array.prototype.forEach.call($("dRounds").children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    if (b) hostSetTotal(+b.getAttribute("data-n"));
   });
   $("dCreateBtn").addEventListener("click", dCreate);
   $("dJoinBtn").addEventListener("click", dJoin);
   $("dCode").addEventListener("keydown", function (e) { if (e.key === "Enter") dJoin(); });
+  $("dStart").addEventListener("click", hostStart);
   $("dCancel").addEventListener("click", function () { leaveDuel(); render(); });
-  $("dCopy").addEventListener("click", function () { if (D) copyText(inviteLink(), "Lien d'invitation copié"); });
-  $("deRematch").addEventListener("click", duelRematch);
+  $("dLeave").addEventListener("click", function () { leaveDuel(); render(); });
   $("deLeave").addEventListener("click", function () { leaveDuel(); render(); });
+  $("deBack").addEventListener("click", hostBack);
+  $("dCopy").addEventListener("click", function () { if (D) copyText(inviteLink(), "Lien d'invitation copié"); });
+  $("lbMore").addEventListener("click", function () { if (D) { D.lbAll = !D.lbAll; render(); } });
+  $("chatToggle").addEventListener("click", function () { if (D) { D.chatOpen = !D.chatOpen; D.chatShown = -1; render(); } });
+  $("chatForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = $("chatIn").value;
+    if (!v.trim()) return;
+    $("chatIn").value = "";
+    sendChat(v);
+  });
+  ["pointerdown", "keydown", "touchstart"].forEach(function (ev) { window.addEventListener(ev, noteActivity, true); });
   $("bilanShare").addEventListener("click", function () { copyText(shareText()); });
   $("bilanAgain").addEventListener("click", restartAll);
   var allResetT = null;
@@ -1580,7 +1832,7 @@ h1 span { color: var(--accent); }
   });
   $("mDaily").addEventListener("click", leaveTo("daily", startDaily));
   $("mFree").addEventListener("click", leaveTo("free", function () { renderEras(); startFree(); }));
-  window.addEventListener("beforeunload", function () { if (D) dSend({ t: "bye" }); });
+  window.addEventListener("beforeunload", function () { if (D && D.role === "guest") dSendTo(D.conn, { t: "bye" }); });
 
   $("foot").innerHTML = NAMES.length + " dessins animés au programme. Pour en ajouter, complète la liste <code>DATA</code> dans le fichier.";
   $("calibBtn").addEventListener("click", enterCalib);
