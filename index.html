@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Générique ?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Concept : un poste de télé du samedi matin. L'écran affiche la mire,
+   six barres de couleur = six essais, chacune libère un extrait plus long. */
+:root {
+  --bg: #0b0e1d;
+  --bg2: #121733;
+  --panel: #151a35;
+  --line: #2a3158;
+  --fg: #f4efe3;
+  --muted: #9ba3c4;
+  --accent: #ffd23f;
+  --on-accent: #1a1500;
+  --ok: #58d67b;
+  --bad: #ff6a63;
+  --bar1: #e8453c;
+  --bar2: #33c36b;
+  --bar3: #3b6cf0;
+  --bar4: #d44bd0;
+  --bar5: #2fd0e0;
+  --bar6: #ffd23f;
+  --f-display: "Bowlby One", "Arial Black", Impact, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.stack { display: flex; flex-direction: column; gap: 22px; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background:
+    radial-gradient(900px 420px at 85% -80px, rgba(212, 75, 208, .20), transparent 70%),
+    radial-gradient(800px 420px at -10% 8%, rgba(59, 108, 240, .22), transparent 70%),
+    var(--bg);
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+  min-height: 100vh;
+}
+.wrap {
+  max-width: 660px;
+  margin-inline: auto;
+  padding-inline: 16px;
+  padding-block: 32px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/* en-tête */
+.top { display: flex; flex-direction: column; gap: 12px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+.eyebrow::before { content: ""; width: 26px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--bar1) 0 16.6%, var(--bar2) 0 33.3%, var(--bar3) 0 50%, var(--bar4) 0 66.6%, var(--bar5) 0 83.3%, var(--bar6) 0); }
+h1 {
+  font-family: var(--f-display); font-weight: 400;
+  font-size: clamp(2.6rem, 12vw, 4rem); line-height: .95; margin: 0; letter-spacing: .01em;
+  text-shadow: 3px 3px 0 var(--bar1), 6px 6px 0 var(--bar3);
+  margin-bottom: 6px;
+}
+h1 span { color: var(--accent); }
+.sub { margin: 0; color: var(--muted); max-width: 46ch; }
+.seg { display: inline-flex; align-self: flex-start; border: 1px solid var(--line); border-radius: 999px; padding: 4px; background: rgba(21, 26, 53, .8); }
+.seg button { border: 0; background: transparent; padding: 8px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--muted); transition: background .15s, color .15s; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+.eras { display: flex; flex-wrap: wrap; gap: 8px; }
+.eras button { border: 1px solid var(--line); background: rgba(21, 26, 53, .6); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 600; color: var(--muted); transition: border-color .15s, color .15s; }
+.eras button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.eras small { font-family: var(--f-mono); font-size: 11px; opacity: .8; margin-left: 6px; }
+
+/* le poste de télé */
+.tv {
+  background: linear-gradient(160deg, #232a52, #151a35 60%);
+  border-radius: 30px;
+  padding: 14px;
+  border: 1px solid #353d6c;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .08);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.screen {
+  position: relative;
+  border-radius: 18px;
+  padding: 16px 14px 18px;
+  background: radial-gradient(120% 100% at 50% 0%, #1a2048 0%, #0a0d1f 70%);
+  box-shadow: inset 0 0 0 2px #05060f, inset 0 0 40px rgba(0, 0, 0, .7);
+  overflow: hidden;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.screen::after { /* lignes de balayage */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 3px);
+  mix-blend-mode: screen;
+}
+.osd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-family: var(--f-mono); }
+.osd .ch { font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--ok); text-transform: uppercase; text-shadow: 0 0 8px rgba(88, 214, 123, .55); }
+.osd strong { font-size: clamp(1.8rem, 8vw, 2.5rem); font-weight: 600; line-height: 1; color: var(--accent); text-shadow: 0 0 14px rgba(255, 210, 63, .45); font-variant-numeric: tabular-nums; }
+.track { position: relative; }
+.bars { display: flex; gap: 4px; }
+.bar {
+  flex: 1 1 0; min-width: 0; height: 92px; border-radius: 7px;
+  background: var(--c); color: var(--ink, #0b0d18);
+  opacity: .2; transition: opacity .25s, transform .25s;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+  padding: 7px 2px 8px; font-family: var(--f-mono); font-weight: 600;
+}
+.bar .t { font-size: 11px; letter-spacing: .02em; opacity: .9; }
+.bar .sym { font-size: 22px; line-height: 1; }
+.bar.used { opacity: 1; }
+.bar.cur { opacity: 1; transform: translateY(-3px); box-shadow: 0 0 0 2px #05060f, 0 0 0 4px var(--c), 0 0 22px var(--c); }
+.bar.win { box-shadow: 0 0 0 2px #05060f, 0 0 0 4px var(--ok), 0 0 24px var(--ok); }
+.cursor { position: absolute; top: -8px; bottom: -8px; width: 3px; left: 0; background: #fff; border-radius: 2px; pointer-events: none; opacity: 0; box-shadow: 0 0 10px #fff; }
+.track.live .cursor { opacity: 1; }
+
+.console { display: flex; align-items: center; gap: 16px; padding: 2px 6px 4px; }
+.play {
+  flex: none; width: 84px; height: 84px; border-radius: 50%; border: 0;
+  background: radial-gradient(circle at 35% 28%, #ffe587, var(--accent) 55%, #e8aa10);
+  color: var(--on-accent); display: grid; place-items: center;
+  box-shadow: 0 8px 0 #a77a00, 0 14px 24px rgba(0, 0, 0, .5);
+  transition: transform .1s, box-shadow .1s;
+}
+.play:active { transform: translateY(5px); box-shadow: 0 3px 0 #a77a00, 0 6px 12px rgba(0, 0, 0, .5); }
+.play[disabled] { opacity: .4; cursor: default; box-shadow: 0 8px 0 #6b5200; }
+.play svg { width: 36px; height: 36px; fill: currentColor; }
+.play .i-stop { display: none; }
+.play.on .i-play { display: none; }
+.play.on .i-stop { display: block; }
+.deck-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.deck-txt strong { font-size: 17px; }
+.deck-txt span { color: var(--muted); font-size: 14px; }
+
+/* saisie */
+.combo { position: relative; }
+#q { width: 100%; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; color: var(--fg); font: inherit; font-size: 17px; padding: 16px 18px; transition: border-color .15s, box-shadow .15s; }
+#q::placeholder { color: var(--muted); }
+#q:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(255, 210, 63, .15); }
+#list { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 8px); margin: 0; padding: 6px; list-style: none; background: #1a2040; border: 1px solid var(--line); border-radius: 14px; max-height: 260px; overflow-y: auto; box-shadow: 0 18px 36px rgba(0, 0, 0, .55); }
+#list li { padding: 11px 12px; border-radius: 9px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; }
+#list li[aria-selected="true"], #list li:hover { background: #2a3158; }
+#list mark { background: transparent; color: var(--accent); }
+.actions { display: flex; gap: 10px; margin-top: 12px; }
+.btn { flex: 1; border-radius: 14px; padding: 14px 16px; font-weight: 700; border: 2px solid var(--line); background: rgba(21, 26, 53, .6); transition: transform .08s, border-color .15s; }
+.btn:hover:not([disabled]) { border-color: #4a5390; }
+.btn:active:not([disabled]) { transform: scale(.98); }
+.btn.primary { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+.btn[disabled] { opacity: .4; cursor: default; }
+
+.notice { margin: 0; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--bad) 14%, var(--bg)); border: 1px solid color-mix(in srgb, var(--bad) 50%, var(--bg)); font-size: 14px; }
+.notice.info { background: var(--panel); border-color: var(--line); color: var(--muted); }
+
+.history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.history li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: rgba(21, 26, 53, .75); border: 1px solid transparent; font-size: 15px; min-width: 0; }
+.history .tag { font-family: var(--f-mono); font-weight: 600; font-size: 13px; width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%; }
+.history .wrong .tag { background: color-mix(in srgb, var(--bad) 22%, transparent); color: var(--bad); }
+.history .skip { color: var(--muted); }
+.history .skip .tag { background: rgba(155, 163, 196, .16); }
+.history .win { border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
+.history .win .tag { background: color-mix(in srgb, var(--ok) 25%, transparent); color: var(--ok); }
+.history .nm { overflow-wrap: anywhere; }
+
+/* fin de partie */
+.end { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 26px 18px 18px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.end::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: linear-gradient(90deg, var(--bar1) 0 16.6%, var(--bar2) 0 33.3%, var(--bar3) 0 50%, var(--bar4) 0 66.6%, var(--bar5) 0 83.3%, var(--bar6) 0); }
+.end .res { font-family: var(--f-mono); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.end .res.ok { color: var(--ok); }
+.end .res.ko { color: var(--bad); }
+.end h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(1.7rem, 7.5vw, 2.4rem); line-height: 1.05; text-wrap: balance; }
+.end .yr { font-family: var(--f-mono); color: var(--muted); font-size: 14px; }
+.end .row { display: flex; flex-wrap: wrap; gap: 10px; }
+.end .row .btn { flex: 1 1 160px; }
+.end a { color: var(--accent); font-weight: 600; font-size: 14px; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 20; }
+.foot { color: var(--muted); font-size: 13px; }
+.foot code { font-family: var(--f-mono); font-size: 12px; }
+
+/* mode Tout */
+.allbar { display: flex; flex-direction: column; gap: 8px; }
+.allmeta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+#allScore { color: var(--muted); white-space: pre; }
+.meter { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--accent); transition: width .3s; }
+.mh { font-family: var(--f-mono); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.chips li { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 14px; }
+
+/* mode Duel */
+.lobby { display: flex; flex-direction: column; gap: 14px; }
+.dcard { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+.dcard h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.25rem; }
+.dcard label { font-family: var(--f-mono); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.dcard .row { display: flex; flex-wrap: wrap; gap: 10px; }
+.dcard .row .btn { flex: 1 1 160px; }
+.field { width: 100%; background: var(--bg); border: 2px solid var(--line); border-radius: 12px; color: var(--fg); font: inherit; font-size: 17px; padding: 13px 14px; }
+.field:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(255, 210, 63, .15); }
+.field.code { font-family: var(--f-mono); font-size: 22px; letter-spacing: .3em; text-transform: uppercase; text-align: center; }
+.pick { display: inline-flex; align-self: flex-start; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--bg); }
+.pick button { border: 0; background: transparent; padding: 7px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--muted); }
+.pick button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.room { align-items: center; text-align: center; }
+.room .big { font-family: var(--f-display); font-size: clamp(2.4rem, 12vw, 3.4rem); letter-spacing: .12em; color: var(--accent); text-shadow: 3px 3px 0 var(--bar3); }
+.wait { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+.duelbar { display: flex; flex-direction: column; gap: 8px; }
+.dmeta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+#dRoom { color: var(--muted); }
+.vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+.vs .side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vs .side.r { text-align: right; align-items: flex-end; }
+.vs .nm { font-weight: 700; overflow-wrap: anywhere; }
+.vs .st { font-size: 13px; color: var(--muted); }
+.vs .pts { font-family: var(--f-mono); font-weight: 600; font-size: 26px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.duelrows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.duelrows li { display: grid; grid-template-columns: minmax(0, 1fr) 4.5ch 4.5ch; gap: 12px; align-items: center; padding: 9px 12px; border-radius: 10px; background: rgba(21, 26, 53, .75); font-size: 14px; }
+.duelrows li.hd { background: none; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-block: 2px; }
+.duelrows .t { overflow-wrap: anywhere; }
+.duelrows .p { font-family: var(--f-mono); font-weight: 600; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duelrows .p.win { color: var(--ok); }
+
+/* réglage du début des extraits */
+.linkbtn { align-self: flex-start; background: none; border: 0; padding: 4px 0; color: var(--accent); font-weight: 600; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.ctitle { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(1.7rem, 7vw, 2.3rem); line-height: 1; }
+.cbar { display: flex; flex-wrap: wrap; gap: 10px; }
+.cbar .btn { flex: 1 1 150px; }
+.clist { display: flex; flex-direction: column; gap: 8px; }
+.crow { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border-radius: 14px; background: rgba(21, 26, 53, .75); border: 1px solid transparent; min-width: 0; }
+.crow.chg { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.cname { font-weight: 700; overflow-wrap: anywhere; }
+.cctl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cctl button { border: 1px solid var(--line); background: transparent; border-radius: 9px; padding: 8px 10px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; }
+.cctl button.cplay { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.cval { width: 74px; text-align: center; background: var(--panel); border: 2px solid var(--line); border-radius: 9px; color: var(--fg); font-family: var(--f-mono); font-size: 15px; font-weight: 600; padding: 7px 4px; }
+.cval:focus { border-color: var(--accent); outline: none; }
+.cunit { color: var(--muted); font-family: var(--f-mono); font-size: 13px; margin-right: 6px; }
+
+/* le lecteur YouTube reste invisible : seul le son compte */
+#ytbox { position: fixed; right: 0; bottom: 0; width: 200px; height: 200px; opacity: 0; pointer-events: none; overflow: hidden; z-index: -1; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (max-width: 440px) {
+  .play { width: 72px; height: 72px; }
+  .bar { height: 76px; }
+  .bar .t { font-size: 9.5px; }
+  .bar .sym { font-size: 18px; }
+  .tv { padding: 10px; border-radius: 24px; }
+  .screen { padding: 14px 10px 16px; }
+  .seg button { padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="stack" id="game">
+  <header class="top">
+    <div class="eyebrow" id="eyebrow">Dessins animés 1980 – 2023</div>
+    <h1>Générique<span>&nbsp;?</span></h1>
+    <p class="sub">Un extrait de plus en plus long. Trouve le dessin animé en 6 essais, à partir de 0,1 seconde.</p>
+    <div class="seg" role="group" aria-label="Mode de jeu">
+      <button type="button" id="mDaily" aria-pressed="true">Du jour</button>
+      <button type="button" id="mFree" aria-pressed="false">Partie libre</button>
+      <button type="button" id="mAll" aria-pressed="false">Tout</button>
+      <button type="button" id="mDuel" aria-pressed="false">Duel</button>
+    </div>
+    <div class="allbar" id="allbar" hidden>
+      <div class="allmeta"><span id="allPos"></span><span id="allScore"></span></div>
+      <div class="meter"><i id="allFill"></i></div>
+      <button type="button" class="linkbtn" id="allReset">Recommencer le tour</button>
+    </div>
+    <div class="duelbar" id="duelbar" hidden>
+      <div class="dmeta"><span id="dRound"></span><span id="dRoom"></span></div>
+      <div class="vs">
+        <div class="side"><span class="nm" id="dMe"></span><span class="st" id="dMeSt"></span></div>
+        <div class="pts" id="dPts"></div>
+        <div class="side r"><span class="nm" id="dOpp"></span><span class="st" id="dOppSt"></span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="eras" id="eras" role="group" aria-label="Époque" hidden></div>
+
+  <p class="notice" id="notice" role="status" hidden></p>
+
+  <section class="lobby" id="lobby" hidden>
+    <div class="dcard">
+      <label for="duelName">Ton pseudo</label>
+      <input class="field" id="duelName" type="text" maxlength="14" autocomplete="off" spellcheck="false" placeholder="Pseudo">
+      <p class="foot">Chaque manche, vous écoutez le même extrait. Trouvé au 1er essai : 6 points, au 2e : 5, et ainsi de suite jusqu'à 1 point au 6e. Pas trouvé : 0.</p>
+    </div>
+    <div class="dcard" id="dCreate">
+      <h3>Créer une salle</h3>
+      <label>Nombre de manches</label>
+      <div class="pick" id="dRounds" role="group" aria-label="Nombre de manches">
+        <button type="button" data-n="5" aria-pressed="false">5</button>
+        <button type="button" data-n="10" aria-pressed="true">10</button>
+        <button type="button" data-n="20" aria-pressed="false">20</button>
+      </div>
+      <button type="button" class="btn primary" id="dCreateBtn">Créer la salle</button>
+    </div>
+    <div class="dcard" id="dJoin">
+      <h3>Rejoindre une salle</h3>
+      <label for="dCode">Code de la salle</label>
+      <input class="field code" id="dCode" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="·····">
+      <button type="button" class="btn" id="dJoinBtn">Rejoindre</button>
+    </div>
+    <div class="dcard room" id="dRoomBox" hidden>
+      <label>Code de la salle</label>
+      <div class="big" id="dRoomCode"></div>
+      <div class="wait"><i class="dot"></i><span id="dWait"></span></div>
+      <div class="row">
+        <button type="button" class="btn" id="dCopy">Copier le lien d'invitation</button>
+        <button type="button" class="btn" id="dCancel">Annuler</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="tv" id="tv" aria-label="Extrait audio">
+    <div class="screen">
+      <div class="osd"><span class="ch" id="tryLabel">Essai 1 / 6</span><strong id="lenLabel">0,1 s</strong></div>
+      <div class="track" id="track">
+        <div class="bars" id="bars"></div>
+        <div class="cursor" id="cursor"></div>
+      </div>
+    </div>
+    <div class="console">
+      <button type="button" class="play" id="play" aria-label="Écouter l'extrait" disabled>
+        <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+        <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+      </button>
+      <div class="deck-txt">
+        <strong id="hint1">Appuie pour écouter</strong>
+        <span id="hint2">Tu peux réécouter autant que tu veux.</span>
+      </div>
+    </div>
+  </section>
+
+  <form id="guessForm" autocomplete="off">
+    <div class="combo">
+      <input id="q" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="list" placeholder="Nom du dessin animé…" enterkeyhint="done" autocapitalize="off" spellcheck="false">
+      <ul id="list" role="listbox" hidden></ul>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" id="skip">Passer</button>
+      <button type="submit" class="btn primary" id="go" disabled>Valider</button>
+    </div>
+  </form>
+
+  <ol class="history" id="history" aria-label="Tes essais"></ol>
+
+  <section class="end" id="end" hidden>
+    <div class="res" id="endRes"></div>
+    <h2 id="endName"></h2>
+    <div class="yr" id="endYear"></div>
+    <p class="foot" id="duelNote" hidden></p>
+    <div class="row">
+      <button type="button" class="btn" id="full">Écouter en entier</button>
+      <button type="button" class="btn" id="share">Partager mon score</button>
+    </div>
+    <div class="row">
+      <button type="button" class="btn primary" id="again">Partie libre</button>
+    </div>
+    <a id="ytlink" href="#" target="_blank" rel="noopener">Voir la vidéo sur YouTube</a>
+  </section>
+
+  <section class="end" id="bilan" hidden>
+    <div class="res ok">Tour terminé</div>
+    <h2 id="bilanScore"></h2>
+    <div class="yr" id="bilanSub"></div>
+    <div id="missedWrap">
+      <div class="mh">À revoir</div>
+      <ul class="chips" id="bilanMissed"></ul>
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="bilanShare">Partager mon score</button>
+      <button type="button" class="btn primary" id="bilanAgain">Nouveau tour</button>
+    </div>
+  </section>
+
+  <section class="end" id="duelEnd" hidden>
+    <div class="res" id="deRes"></div>
+    <h2 id="deScore"></h2>
+    <div class="yr" id="deSub"></div>
+    <ol class="duelrows" id="deRows"></ol>
+    <p class="foot" id="deWait" hidden></p>
+    <div class="row">
+      <button type="button" class="btn primary" id="deRematch">Revanche</button>
+      <button type="button" class="btn" id="deLeave">Quitter</button>
+    </div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+  <button type="button" class="linkbtn" id="calibBtn">Régler le début des extraits</button>
+  </div>
+
+  <section class="stack" id="calib" hidden>
+    <div class="top">
+      <div class="eyebrow">Réglage</div>
+      <h2 class="ctitle">Début des extraits</h2>
+      <p class="sub">Pour chaque générique, trouve la seconde où le son démarre vraiment. Le bouton 0,1 s joue exactement ce que le jeu jouera au premier essai. Les réglages sont gardés dans ce navigateur.</p>
+    </div>
+    <div class="cbar">
+      <button type="button" class="btn primary" id="cCopy">Copier les valeurs</button>
+      <button type="button" class="btn" id="cReset">Tout remettre à zéro</button>
+      <button type="button" class="btn" id="cBack">Retour au jeu</button>
+    </div>
+    <div class="clist" id="calibList"></div>
+  </section>
+</main>
+<div id="ytbox"><div id="yt"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------
+     LISTE DES GÉNÉRIQUES — pour en ajouter, copie une ligne :
+       v : identifiant de la vidéo YouTube (ce qui suit "v=" dans l'adresse)
+       n : nom du dessin animé (c'est la réponse attendue)
+       y : année de début de la série
+       a : autres noms acceptés dans la recherche (facultatif)
+       s : seconde de départ de l'extrait (facultatif, 0 par défaut)
+     Deux lignes avec le même "n" comptent comme la même réponse.
+  ------------------------------------------------------------------ */
+  var DATA = [
+    { v: "PUn4n-nGraM", n: "Les Schtroumpfs", y: 1981, s: 0.4, a: ["schtroumpf", "smurfs"] },
+    { v: "5gBmSShaGbA", n: "Les Mystérieuses Cités d'or", y: 1982, a: ["cites d or"] },
+    { v: "i0mlC026Wwk", n: "Inspecteur Gadget", y: 1983, s: 0.9, a: ["gadget"] },
+    { v: "eKIUFYmO-FQ", n: "Nicky Larson", y: 1987, s: 0.3, a: ["city hunter"] },
+    { v: "aOYJ6tN3kW8", n: "Ken le Survivant", y: 1984, s: 1.1, a: ["hokuto no ken", "fist of the north star"] },
+    { v: "juQl2UbcD7w", n: "Olive et Tom", y: 1983, s: 0.1, a: ["captain tsubasa"] },
+    { v: "CsCcPHRPnBo", n: "Les Chevaliers du Zodiaque", y: 1986, s: 1.4, a: ["saint seiya", "zodiaque"] },
+    { v: "FJqGirLjQn4", n: "Dragon Ball", y: 1986, a: ["db"] },
+    { v: "qQmTdijhjD4", n: "Dragon Ball Z", y: 1989, s: 7.3, a: ["dbz"] },
+    { v: "fg1tZCCg1N4", n: "Princesse Sarah", y: 1985, s: 0.1, a: ["sara", "petite princesse"] },
+    { v: "xbo-hFs6cI8", n: "Tom Sawyer", y: 1980, s: 0.1, a: ["les aventures de tom sawyer"] },
+    { v: "DZGN9fZvQhc", n: "Spider-Man", y: 1994, s: 0.2, a: ["spiderman", "l homme araignee"] },
+    { v: "r_0qwPd9VHo", n: "Les Simpson", y: 1989, s: 0.1, a: ["simpsons"] },
+    { v: "D5HsGK5LH-w", n: "Batman", y: 1992, s: 0.1 },
+    { v: "JQPbtBD9qsU", n: "Capitaine Planète", y: 1990, s: 0.1, a: ["captain planet"] },
+    { v: "3Hbi9ajKOy8", n: "Les Razmoket", y: 1991, s: 0.1, a: ["rugrats"] },
+    { v: "vi1kJ6UBj5c", n: "Hé Arnold !", y: 1996, s: 4.1, a: ["hey arnold"] },
+    { v: "Ya3Q9OLk25g", n: "Le Laboratoire de Dexter", y: 1996, s: 0.4, a: ["dexter", "dexters laboratory"] },
+    { v: "9SfjOlHd9ZE", n: "Les Supers Nanas", y: 1998, a: ["powerpuff girls"] },
+    { v: "MmfeL0R5rbY", n: "Johnny Bravo", y: 1997, s: 0.1 },
+    { v: "mbd2linSia4", n: "Les Zinzins de l'espace", y: 1997, s: 1.2, a: ["zinzins"] },
+    { v: "qBlmFxgZhlk", n: "La Famille Delajungle", y: 1998, a: ["wild thornberrys", "thornberrys"] },
+    { v: "0wGq5gpkBC0", n: "Bob l'éponge", y: 1999, a: ["spongebob", "bob eponge"] },
+    { v: "S8p22rtNMoM", n: "South Park", y: 1997, s: 1.1 },
+    { v: "6F1QNfmiqHc", n: "Futurama", y: 1999, s: 1 },
+    { v: "2apJXX46ce0", n: "Oggy et les Cafards", y: 1998, a: ["oggy"] },
+    { v: "OA19qsb2rKU", n: "Les Aventures de Tintin", y: 1991, s: 0.3, a: ["tintin"] },
+    { v: "LrvQAlOGXdI", n: "Le Bus magique", y: 1994, s: 0.5, a: ["magic school bus"] },
+    { v: "Z9G1Mf6TZRs", n: "Sonic X", y: 2003, s: 0.1, a: ["sonic"] },
+    { v: "YhN4oAS3O4c", n: "Pokémon", y: 1997, s: 3.2, a: ["pokemon"] },
+    { v: "a5c_YLOBxEs", n: "Digimon", y: 1999, s: 2, a: ["digimon adventure"] },
+    { v: "NblCMtB42MM", n: "Yu-Gi-Oh!", y: 2000, a: ["yugioh", "yu gi oh"] },
+    { v: "qfUbqI_q0Ho", n: "Dragon Ball GT", y: 1996, s: 1.1, a: ["dbgt"] },
+    { v: "YoeP9w5UIlg", n: "One Piece", y: 1999, s: 0.5 },
+    { v: "nU21rCWkuJw", n: "Neon Genesis Evangelion", y: 1995, s: 2, a: ["evangelion", "eva"] },
+    { v: "EL-D9LrFJd4", n: "Cowboy Bebop", y: 1998, s: 0.1, a: ["bebop"] },
+    { v: "faqmNf_fZlE", n: "Hunter x Hunter", y: 2011, s: 0.5, a: ["hxh", "hunter hunter"] },
+    { v: "U6lvy7ZFZ5M", n: "Totally Spies", y: 2001, s: 0.2, a: ["ts"] },
+    { v: "fJIKatjB00U", n: "Code Lyoko", y: 2003, s: 1.2, a: ["un monde sans danger"] },
+    { v: "1_TC8hG_vHs", n: "Spectacular Spider-Man", y: 2008, s: 0.1, a: ["spectacular spiderman", "spider-man spectaculaire"] },
+    { v: "gUzx4rMiJf4", n: "Kid Paddle", y: 2003, s: 0.6 },
+    { v: "8lxchoqEUZg", n: "Jimmy Neutron", y: 2002, s: 0.1 },
+    { v: "jsJcQAhV83o", n: "Mes parrains sont magiques", y: 2001, s: 0.1, a: ["fairly oddparents", "parrains magiques"] },
+    { v: "GkKx5fz31w8", n: "Kim Possible", y: 2002 },
+    { v: "VIZyAyVtId0", n: "Lilo & Stitch", y: 2003, s: 2.7, a: ["lilo et stitch", "lilo stitch la serie"] },
+    { v: "cRlHqkzjTIM", n: "Phinéas et Ferb", y: 2007, s: 0.1, a: ["phineas and ferb", "phineas ferb"] },
+    { v: "50Soevw2ZVU", n: "Ben 10", y: 2005, a: ["ben ten"] },
+    { v: "BGycFj-V3x4", n: "Avatar, le dernier maître de l'air", y: 2005, s: 0.2, a: ["avatar", "atla", "dernier maitre de l air"] },
+    { v: "SgqK1KrhKYM", n: "Johnny Test", y: 2005, s: 0.2 },
+    { v: "0L4wXoPKvYA", n: "Winx Club", y: 2004, s: 0.2 },
+    { v: "Cf4mErmjMGM", n: "Wakfu", y: 2008, s: 1.1 },
+    { v: "WJOAvttDJ-Q", n: "Les Griffin", y: 1999, a: ["family guy", "griffin"] },
+    { v: "3fKNf5dLA_M", n: "American Dad", y: 2005 },
+    { v: "kUw2v3Jp0ik", n: "Star Wars: The Clone Wars", y: 2008, s: 0.8, a: ["clone wars", "guerre des clones"] },
+    { v: "q1aq9GEHR8Q", n: "Naruto", y: 2002, s: 1.4 },
+    { v: "Oim_0n0nSWM", n: "Naruto Shippuden", y: 2007, s: 0.1 },
+    { v: "1HOhxibhCWg", n: "Fullmetal Alchemist", y: 2003, s: 0.2, a: ["fma"] },
+    { v: "elyXcwunIYA", n: "Fullmetal Alchemist: Brotherhood", y: 2009, s: 0.3, a: ["fma brotherhood", "brotherhood"] },
+    { v: "5emM3JGI5JA", n: "Bleach", y: 2004, s: 0.5 },
+    { v: "Bt3D3Ca9nww", n: "Death Note", y: 2006, s: 0.4 },
+    { v: "G8CFuZ9MseQ", n: "Code Geass", y: 2006, s: 0.1 },
+    { v: "9jvVBVcZ0-Y", n: "Fairy Tail", y: 2009, s: 1.2 },
+    { v: "nkP3IG2M7SQ", n: "Monster Buster Club", y: 2008 },
+    { v: "wNqhEqnV-GY", n: "Saint Seiya Omega", y: 2012, s: 0.6 },
+    { v: "MAo-m_5Co4c", n: "Beyblade Metal Fury", y: 2011, s: 2.9, a: ["beyblade"] },
+    { v: "eRO5_PbhiZU", n: "Yu-Gi-Oh! Zexal", y: 2011, a: ["yugioh zexal", "yu gi oh zexal"] },
+    { v: "pMTF1RCDmhg", n: "Inazuma Eleven", y: 2008, s: 0.5 },
+    { v: "bhZRTSst5qU", n: "Pokémon", y: 2010, s: 0.1, a: ["pokemon"], sub: "Noir & Blanc" },
+    { v: "GCJ94ZU8BPE", n: "Kaijudo", y: 2012, s: 15.2 },
+    { v: "SHFuu3GVyfc", n: "Gormiti", y: 2012, s: 0.1 },
+    { v: "dT4zXL7U8MU", n: "Les Sisters", y: 2016, s: 0.1 },
+    { v: "fdfFfUlKCBA", n: "Sanjay et Craig", y: 2013, s: 0.1 },
+    { v: "FUJvkk5Qx4I", n: "Breadwinners", y: 2014, s: 0.1 },
+    { v: "mwl1reVfFzI", n: "Le Monde incroyable de Gumball", y: 2011, s: 0.1, a: ["gumball"] },
+    { v: "tU3QtN2_MvU", n: "Digimon Fusion", y: 2010, s: 4, a: ["digimon xros wars"] },
+    { v: "5pfR9g9qe9o", n: "Magic, la famille féerique", y: 2011, s: 0.2, a: ["magic"] },
+    { v: "fGhmCqz9CJI", n: "Zig & Sharko", y: 2010, a: ["zig et sharko"] },
+    { v: "MK-0qdHmx8A", n: "Hubert & Takako", y: 2011, s: 1, a: ["hubert et takako"] },
+    { v: "FUb9Pg7KmEM", n: "Heidi", y: 2015 },
+    { v: "QQQPLoQs-HE", n: "Drôles de petites bêtes", y: 2006, s: 0.3 },
+    { v: "GwaRztMaoY0", n: "Jujutsu Kaisen", y: 2020, s: 0.4, a: ["jjk"] },
+    { v: "SdtlqTSDKVs", n: "Michat-Michien", y: 2008, s: 0.2 },
+    { v: "m2ERVrXjeEc", n: "Objectif Blake", y: 2015, s: 0.2, a: ["get blake", "blake"] },
+    { v: "p3RMOO1lP-I", n: "Jackie Chan", y: 2000, s: 1.2, a: ["jackie chan adventures", "les aventures de jackie chan"] },
+    { v: "ia-KUijCgXM", n: "Angelo la Débrouille", y: 2011, s: 0.1, a: ["angelo rules", "angelo"] },
+    { v: "AaAkBwbytg8", n: "Kaeloo", y: 2010 },
+    { v: "74i27IFhoFU", n: "Les Lapins crétins : Invasion", y: 2013, a: ["lapins cretins", "raving rabbids invasion"] },
+    { v: "0osMMDYrd9g", n: "Ninjago", y: 2011, s: 0.1, a: ["lego ninjago"] },
+    { v: "wh10k2LPZiI", n: "Rick et Morty", y: 2013, s: 0.1, a: ["rick and morty"] },
+    { v: "Z8scBJz-QdE", n: "L'Île des défis", y: 2007, s: 0.2, a: ["total drama", "total drama island", "ile des defis extreme"] },
+    { v: "9KcPrn8-hjg", n: "Pyjamasques", y: 2015, s: 2.8, a: ["pj masks"] },
+    { v: "CID-sYQNCew", n: "L'Attaque des Titans", y: 2013, s: 0.1, a: ["shingeki no kyojin", "attack on titan", "snk"] },
+    { v: "atxYe-nOa9w", n: "One Punch Man", y: 2015, s: 0.5, a: ["opm"] },
+    { v: "L1FdEBTJXus", n: "My Hero Academia", y: 2016, s: 0.5, a: ["mha", "boku no hero"] },
+    { v: "st4wcpjZeQQ", n: "Demon Slayer", y: 2019, s: 2, a: ["kimetsu no yaiba"] },
+    { v: "4Ezu-KgSGD8", n: "Gravity Falls", y: 2012, a: ["souvenirs de gravity falls"] },
+    { v: "_1JvxrSlDRc", n: "Saint Seiya Omega", y: 2012, s: 35.2 },
+    { v: "zsyaqU4qhOA", n: "Yo-kai Watch", y: 2013, a: ["yokai watch"] },
+    { v: "x_UKAt_vjsY", n: "Miraculous", y: 2015, s: 3.1, a: ["ladybug", "miraculous ladybug"] }
+  ];
+
+  var STEPS = [0.1, 0.5, 1.5, 4, 8, 16];   // secondes d'extrait à chaque essai
+  var INKS = ["#fff", "#0b0d18", "#fff", "#fff", "#0b0d18", "#0b0d18"];
+  var ERAS = [
+    { id: "all", label: "Toutes", min: 0, max: 9999 },
+    { id: "80", label: "Années 80", min: 1980, max: 1989 },
+    { id: "90", label: "Années 90", min: 1990, max: 1999 },
+    { id: "00", label: "Années 2000", min: 2000, max: 2009 },
+    { id: "10", label: "2010 et après", min: 2010, max: 2023 }
+  ];
+
+  function $(id) { return document.getElementById(id); }
+  function fmt(s) { return String(Math.round(s * 10) / 10).replace(".", ","); }
+  function norm(s) {
+    return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  }
+  DATA.forEach(function (d) { d.k = norm([d.n].concat(d.a || []).join(" ")); d.nn = norm(d.n); });
+
+  var NAMES = [];
+  (function () {
+    var seen = {};
+    DATA.forEach(function (d) { if (!seen[d.n]) { seen[d.n] = 1; NAMES.push(d); } });
+    NAMES.sort(function (a, b) { return a.nn < b.nn ? -1 : a.nn > b.nn ? 1 : 0; });
+  })();
+
+  function hash(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function dateKey() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function dateLabel() { var d = new Date(); return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear(); }
+
+  /* ----------------------------- stockage ----------------------------- */
+  function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignoré */ } }
+  var broken = {};
+  (lsGet("gen-broken") || []).forEach(function (v) { broken[v] = 1; });
+  function saveBroken() { lsSet("gen-broken", Object.keys(broken)); }
+  /* début réglé à la main (outil « Régler le début des extraits ») */
+  var offs = lsGet("gen-offsets") || {};
+  function startOf(d) { var o = offs[d.v]; return typeof o === "number" ? o : (d.s || 0); }
+
+  /* -------------------------------- état ------------------------------- */
+  var mode = "daily", era = "all";
+  var answer = null, step = 0, guesses = [], over = false, won = false, lastV = null;
+  var selected = null, activeIdx = -1, matches = [];
+  var A = null;                 // tour en cours du mode « Tout »
+  var BYV = {};
+  DATA.forEach(function (d) { BYV[d.v] = d; });
+
+  /* ------------------------------ lecteur ------------------------------ */
+  var player = null, ready = false, armed = false, playing = false, fullMode = false;
+  var clipLen = 0, playStart = 0, stopT = null, armT = null, raf = 0, failStreak = 0, fatal = false;
+
+  function setNotice(msg, info) {
+    var n = $("notice");
+    if (!msg) { n.hidden = true; return; }
+    n.textContent = msg;
+    n.className = "notice" + (info ? " info" : "");
+    n.hidden = false;
+  }
+
+  var loadedV = null;   // vidéo actuellement chargée dans le lecteur
+  function loadVideo() {
+    if (!ready || !answer) return;
+    try { player.cueVideoById({ videoId: answer.v, startSeconds: startOf(answer) }); loadedV = answer.v; } catch (e) { /* ignoré */ }
+    $("play").disabled = false;
+  }
+
+  function stopPlayback() {
+    clearTimeout(stopT); clearTimeout(armT);
+    cancelAnimationFrame(raf);
+    armed = false; playing = false; fullMode = false;
+    try { if (player && ready) player.pauseVideo(); } catch (e) { /* ignoré */ }
+    $("cursor").style.left = "0%";
+    $("track").classList.remove("live");
+    updatePlayUI();
+  }
+
+  function playRange(entry, len, full) {
+    if (!entry || fatal) return;
+    if (!ready) { toast("Le lecteur n'est pas encore prêt."); return; }
+    stopPlayback();
+    fullMode = !!full;
+    clipLen = full ? 0 : len;
+    armed = true;
+    var st = startOf(entry);
+    try {
+      if (loadedV !== entry.v) { player.loadVideoById({ videoId: entry.v, startSeconds: st }); loadedV = entry.v; }
+      else { player.seekTo(st, true); player.playVideo(); }
+    } catch (e) { stopPlayback(); return; }
+    armT = setTimeout(function () {
+      if (!armed) return;
+      stopPlayback();
+      if (calib) toast("Le lecteur ne répond pas."); else setNotice("Le lecteur ne répond pas. Réessaie dans un instant.", true);
+    }, 8000);
+    updatePlayUI();
+  }
+  function startClip(full) {
+    if (!answer) return;
+    playRange(answer, STEPS[Math.min(step, STEPS.length - 1)], full);
+  }
+
+  /* position du curseur : chaque barre a la même largeur, quel que soit son extrait */
+  function posFor(t) {
+    for (var i = 0; i < STEPS.length; i++) {
+      var prev = i ? STEPS[i - 1] : 0;
+      if (t < STEPS[i]) return ((i + (t - prev) / (STEPS[i] - prev)) / STEPS.length) * 100;
+    }
+    return 100;
+  }
+  function tick() {
+    if (!playing) return;
+    var el = (performance.now() - playStart) / 1000;
+    $("cursor").style.left = posFor(el) + "%";
+    raf = requestAnimationFrame(tick);
+  }
+
+  function updatePlayUI() {
+    var on = playing || armed;
+    var p = $("play");
+    p.classList.toggle("on", on && !fullMode);
+    p.setAttribute("aria-label", on && !fullMode ? "Arrêter" : "Écouter l'extrait");
+    $("full").textContent = on && fullMode ? "Arrêter" : "Écouter en entier";
+  }
+
+  function onState(e) {
+    var S = window.YT.PlayerState;
+    if (e.data === S.CUED) { failStreak = 0; setNotice(""); }
+    if (e.data === S.PLAYING && armed) {
+      armed = false; clearTimeout(armT);
+      playing = true; failStreak = 0;
+      playStart = performance.now();
+      if (!fullMode) stopT = setTimeout(stopPlayback, clipLen * 1000);
+      $("track").classList.add("live");
+      tick();
+      updatePlayUI();
+    }
+    if (e.data === S.ENDED) stopPlayback();
+  }
+
+  function onError(e) {
+    var code = e.data;
+    stopPlayback();
+    failStreak++;
+    if (code === 153 || code === 2 || failStreak >= 4) {
+      fatal = true;
+      $("play").disabled = true;
+      setNotice("Le lecteur YouTube refuse de démarrer. Ouvre la page depuis un site hébergé (ou http://localhost), pas en double-cliquant sur le fichier.");
+      toast("Le lecteur YouTube refuse de démarrer.");
+      return;
+    }
+    if (calib) { toast("Cette vidéo n'est pas lisible ici."); return; }
+    if (answer) {
+      broken[answer.v] = 1; saveBroken();
+      if (mode === "duel") { dVoid(false); return; }
+      setNotice("Une vidéo n'est pas lisible ici, j'en ai pris une autre.", true);
+      if (mode === "daily") startDaily();
+      else if (mode === "all") dropBrokenAll();
+      else startFree();
+    }
+  }
+
+  window.onYouTubeIframeAPIReady = function () {
+    var vars = { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0 };
+    if (/^https?:$/.test(location.protocol)) vars.origin = location.origin;
+    player = new window.YT.Player("yt", {
+      width: 200, height: 200, playerVars: vars,
+      events: {
+        onReady: function () { ready = true; loadVideo(); },
+        onStateChange: onState,
+        onError: onError
+      }
+    });
+  };
+  (function () {
+    var s = document.createElement("script");
+    s.src = "https://www.youtube.com/iframe_api";
+    s.onerror = function () { setNotice("Impossible de charger le lecteur YouTube. Vérifie ta connexion."); };
+    document.head.appendChild(s);
+  })();
+
+  /* ------------------------------- parties ------------------------------ */
+  function dailyEntry() {
+    var i = hash("generique:" + dateKey()) % DATA.length;
+    for (var k = 0; k < DATA.length; k++) {
+      var e = DATA[(i + k) % DATA.length];
+      if (!broken[e.v]) return e;
+    }
+    return DATA[i];
+  }
+  function inEra(d) {
+    var er = ERAS.filter(function (x) { return x.id === era; })[0] || ERAS[0];
+    return d.y >= er.min && d.y <= er.max;
+  }
+  function pickFree() {
+    var pool = DATA.filter(function (d) { return inEra(d) && !broken[d.v] && d.v !== lastV; });
+    if (!pool.length) pool = DATA.filter(function (d) { return !broken[d.v]; });
+    if (!pool.length) pool = DATA;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function beginRound(entry) {
+    stopPlayback();
+    answer = entry; lastV = entry.v;
+    step = 0; guesses = []; over = false; won = false; selected = null;
+    $("q").value = "";
+    closeList();
+    loadVideo();
+    render();
+  }
+  function startDaily() {
+    var e = dailyEntry();
+    var saved = lsGet("gen-daily");
+    beginRound(e);
+    if (saved && saved.d === dateKey() && saved.v === e.v) {
+      guesses = saved.g || []; over = !!saved.over; won = !!saved.won;
+      step = Math.min(guesses.length, STEPS.length - 1);
+      if (over) step = Math.max(0, guesses.length - 1);
+      render();
+    }
+  }
+  function startFree() { beginRound(pickFree()); }
+
+  /* ----------------- mode « Tout » : les extraits un par un ---------------- */
+  var SIG = hash(DATA.map(function (d) { return d.v; }).sort().join(","));
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function newTour() {
+    var ids = DATA.filter(function (d) { return !broken[d.v]; }).map(function (d) { return d.v; });
+    return { sig: SIG, order: shuffle(ids), pos: 0, results: [], g: [], over: false, won: false };
+  }
+  function validTour(s) {
+    return !!s && s.sig === SIG && Array.isArray(s.order) && s.order.length > 0 && Array.isArray(s.results) &&
+      typeof s.pos === "number" && s.order.every(function (v) { return BYV[v]; });
+  }
+  function saveAll() {
+    if (mode !== "all" || !A || !answer) return;
+    A.g = guesses; A.over = over; A.won = won;
+    if (over) A.results[A.pos] = { v: answer.v, ok: won, n: guesses.length };
+    lsSet("gen-all", A);
+  }
+  function loadRoundAll() {
+    stopPlayback();
+    if (A.pos >= A.order.length) { render(); return; }
+    beginRound(BYV[A.order[A.pos]]);
+    if ((A.g && A.g.length) || A.over) {
+      guesses = A.g || []; over = !!A.over; won = !!A.won;
+      step = over ? Math.max(0, guesses.length - 1) : Math.min(guesses.length, STEPS.length - 1);
+      render();
+    }
+  }
+  function startAll() {
+    var s = lsGet("gen-all");
+    A = validTour(s) ? s : newTour();
+    lsSet("gen-all", A);
+    loadRoundAll();
+  }
+  function restartAll() { A = newTour(); lsSet("gen-all", A); loadRoundAll(); }
+  function nextAll() {
+    A.pos++; A.g = []; A.over = false; A.won = false;
+    lsSet("gen-all", A);
+    loadRoundAll();
+  }
+  function dropBrokenAll() {
+    var i = A.order.indexOf(answer.v);
+    if (i >= 0) A.order.splice(i, 1);
+    A.g = []; A.over = false; A.won = false;
+    lsSet("gen-all", A);
+    loadRoundAll();
+  }
+  function saveDaily() {   // sauvegarde la partie en cours (du jour ou tour « Tout »)
+    if (mode === "all") { saveAll(); return; }
+    if (mode === "duel") { duelSync(); return; }
+    if (mode !== "daily" || !answer) return;
+    lsSet("gen-daily", { d: dateKey(), v: answer.v, g: guesses, over: over, won: won });
+  }
+
+  function submitGuess(name) {
+    if (over || !name) return;
+    stopPlayback();
+    if (name === answer.n) {
+      guesses.push({ t: "win", n: name });
+      over = true; won = true;
+    } else {
+      guesses.push({ t: "wrong", n: name });
+      advance();
+    }
+    saveDaily(); render();
+  }
+  function skip() {
+    if (over) return;
+    stopPlayback();
+    guesses.push({ t: "skip" });
+    advance();
+    saveDaily(); render();
+  }
+  function advance() {
+    if (guesses.length >= STEPS.length) { over = true; won = false; step = STEPS.length - 1; }
+    else step = guesses.length;
+  }
+
+  /* ------------------------------- rendu -------------------------------- */
+  function render() {
+    var bars = $("bars");
+    bars.innerHTML = "";
+    STEPS.forEach(function (s, i) {
+      var b = document.createElement("div");
+      b.className = "bar";
+      b.style.setProperty("--c", "var(--bar" + (i + 1) + ")");
+      b.style.setProperty("--ink", INKS[i]);
+      var t = document.createElement("span"); t.className = "t"; t.textContent = fmt(s) + " s";
+      var sym = document.createElement("span"); sym.className = "sym";
+      var g = guesses[i];
+      if (g) {
+        b.classList.add("used");
+        sym.textContent = g.t === "win" ? "✓" : g.t === "wrong" ? "✕" : "»";
+        if (g.t === "win") b.classList.add("win");
+      } else if (i === step && !over) {
+        b.classList.add("cur");
+      }
+      b.appendChild(sym); b.appendChild(t);
+      bars.appendChild(b);
+    });
+
+    var s = STEPS[Math.min(step, STEPS.length - 1)];
+    $("lenLabel").textContent = fmt(s) + " s";
+    $("tryLabel").textContent = over ? "Terminé" : "Essai " + (step + 1) + " / " + STEPS.length;
+    var next = STEPS[Math.min(step + 1, STEPS.length - 1)];
+    $("skip").textContent = step >= STEPS.length - 1 ? "Abandonner" : "Passer (+" + fmt(next - s) + " s)";
+    $("hint1").textContent = over ? "Réécoute l'extrait" : "Extrait de " + fmt(s) + " s";
+    $("hint2").textContent = over ? "Le générique complet est plus bas." : "Tu peux le réécouter autant que tu veux.";
+
+    var h = $("history");
+    h.innerHTML = "";
+    guesses.forEach(function (g) {
+      var li = document.createElement("li");
+      li.className = g.t;
+      var tag = document.createElement("span"); tag.className = "tag";
+      tag.textContent = g.t === "win" ? "✓" : g.t === "wrong" ? "✕" : "»";
+      var nm = document.createElement("span"); nm.className = "nm";
+      nm.textContent = g.t === "skip" ? "Passé" : g.n;
+      li.appendChild(tag); li.appendChild(nm);
+      h.appendChild(li);
+    });
+
+    $("guessForm").hidden = over;
+    $("end").hidden = !over;
+
+    /* mode Tout : barre de progression et bilan final */
+    var inAll = mode === "all" && !!A;
+    var bil = inAll && A.pos >= A.order.length;
+    var doneN = inAll ? A.results.filter(Boolean).length : 0;
+    var foundN = inAll ? A.results.filter(function (r) { return r && r.ok; }).length : 0;
+    $("allbar").hidden = !inAll || bil;
+    $("tv").hidden = bil;
+    $("history").hidden = bil;
+    $("bilan").hidden = !bil;
+    if (bil) { $("guessForm").hidden = true; $("end").hidden = true; }
+    if (inAll && !bil) {
+      $("allPos").textContent = "Générique " + (A.pos + 1) + " / " + A.order.length;
+      $("allScore").textContent = "✓ " + foundN + "   ✕ " + (doneN - foundN);
+      $("allFill").style.width = (doneN / A.order.length * 100) + "%";
+    }
+    if (bil) {
+      $("bilanScore").textContent = foundN + " / " + A.order.length;
+      $("bilanSub").textContent = foundN === A.order.length ? "Sans faute." : (A.order.length - foundN) + " à revoir";
+      var ul = $("bilanMissed"), seen = {}, cnt = 0;
+      ul.innerHTML = "";
+      A.results.forEach(function (r) {
+        if (!r || r.ok) return;
+        var nm = BYV[r.v] ? BYV[r.v].n : r.v;
+        if (seen[nm]) return;
+        seen[nm] = 1; cnt++;
+        var li = document.createElement("li"); li.textContent = nm;
+        ul.appendChild(li);
+      });
+      $("missedWrap").hidden = cnt === 0;
+    }
+    $("go").disabled = !selected;
+    if (over && answer) {
+      var r = $("endRes");
+      r.className = "res " + (won ? "ok" : "ko");
+      r.textContent = won ? "Trouvé en " + guesses.length + " essai" + (guesses.length > 1 ? "s" : "") : "Raté";
+      $("endName").textContent = answer.n;
+      $("endYear").textContent = answer.sub ? answer.sub + " (" + answer.y + ")" : "Depuis " + answer.y;
+      $("ytlink").href = "https://www.youtube.com/watch?v=" + encodeURIComponent(answer.v);
+      if (mode === "all") $("again").textContent = A.pos + 1 >= A.order.length ? "Voir le bilan" : "Suivant →";
+      else $("again").textContent = mode === "daily" ? "Partie libre" : "Un autre générique";
+    }
+    $("eyebrow").textContent = mode === "daily" ? "Édition du " + dateLabel() : mode === "all" ? "Tout · " + (A ? A.order.length : DATA.length) + " génériques" : "Partie libre";
+    $("eras").hidden = mode !== "free";
+    $("mDaily").setAttribute("aria-pressed", String(mode === "daily"));
+    $("mFree").setAttribute("aria-pressed", String(mode === "free"));
+    $("mAll").setAttribute("aria-pressed", String(mode === "all"));
+    $("mDuel").setAttribute("aria-pressed", String(mode === "duel"));
+    if (mode === "duel") $("eyebrow").textContent = "Duel 1v1";
+    $("again").disabled = false;
+    renderDuel();
+    updatePlayUI();
+  }
+
+  function renderEras() {
+    var box = $("eras");
+    box.innerHTML = "";
+    ERAS.forEach(function (e) {
+      var n = DATA.filter(function (d) { return d.y >= e.min && d.y <= e.max; }).length;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(e.id === era));
+      b.appendChild(document.createTextNode(e.label));
+      var sm = document.createElement("small"); sm.textContent = String(n);
+      b.appendChild(sm);
+      b.addEventListener("click", function () { era = e.id; renderEras(); startFree(); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ------------------------ recherche / suggestions ---------------------- */
+  function closeList() {
+    $("list").hidden = true; $("q").setAttribute("aria-expanded", "false");
+    activeIdx = -1;
+  }
+  function highlight(name, q) {
+    var frag = document.createDocumentFragment();
+    var n = norm(name), i = q ? n.indexOf(q) : -1;
+    if (i < 0 || n.length !== name.toLowerCase().length) { frag.appendChild(document.createTextNode(name)); return frag; }
+    frag.appendChild(document.createTextNode(name.slice(0, i)));
+    var m = document.createElement("mark"); m.textContent = name.slice(i, i + q.length);
+    frag.appendChild(m);
+    frag.appendChild(document.createTextNode(name.slice(i + q.length)));
+    return frag;
+  }
+  function updateList() {
+    var raw = $("q").value, q = norm(raw);
+    selected = null;
+    var exact = NAMES.filter(function (d) { return d.nn === q; })[0];
+    if (exact) selected = exact.n;
+    $("go").disabled = !selected;
+    if (!q) { closeList(); return; }
+    var toks = q.split(" ");
+    matches = NAMES.filter(function (d) {
+      return toks.every(function (t) { return d.k.indexOf(t) !== -1; });
+    });
+    matches.sort(function (a, b) {
+      var sa = a.nn.indexOf(q) === 0 ? 0 : 1, sb = b.nn.indexOf(q) === 0 ? 0 : 1;
+      return sa - sb;
+    });
+    var ul = $("list");
+    ul.innerHTML = "";
+    if (!matches.length) {
+      var li0 = document.createElement("li");
+      li0.textContent = "Aucun résultat"; li0.style.cursor = "default"; li0.style.color = "var(--muted)";
+      ul.appendChild(li0);
+    }
+    matches.forEach(function (d, i) {
+      var li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", "false");
+      var sp = document.createElement("span"); sp.appendChild(highlight(d.n, q));
+      li.appendChild(sp);
+      li.addEventListener("mousedown", function (ev) { ev.preventDefault(); choose(i); });
+      ul.appendChild(li);
+    });
+    activeIdx = -1;
+    ul.hidden = false; $("q").setAttribute("aria-expanded", "true");
+  }
+  function choose(i) {
+    var d = matches[i];
+    if (!d) return;
+    $("q").value = d.n; selected = d.n;
+    $("go").disabled = false;
+    closeList();
+  }
+  function moveActive(delta) {
+    var items = $("list").querySelectorAll("li[role=option]");
+    if (!items.length) return;
+    activeIdx = (activeIdx + delta + items.length) % items.length;
+    items.forEach(function (li, i) { li.setAttribute("aria-selected", String(i === activeIdx)); });
+    items[activeIdx].scrollIntoView({ block: "nearest" });
+  }
+
+  /* ------------------------------- partage ------------------------------ */
+  var toastT = null;
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2200);
+  }
+  function shareText() {
+    if (mode === "all" && A) {
+      var fd = A.results.filter(function (r) { return r && r.ok; }).length;
+      var dn = A.results.filter(Boolean).length;
+      return "Générique ? Tout : " + fd + " trouvés sur " + dn + " (" + A.order.length + " au total)";
+    }
+    var sq = guesses.map(function (g) { return g.t === "win" ? "🟩" : g.t === "wrong" ? "🟥" : "⬛"; });
+    while (sq.length < STEPS.length) sq.push("⬜");
+    var score = won ? guesses.length + "/" + STEPS.length : "X/" + STEPS.length;
+    var when = mode === "daily" ? dateLabel() : "partie libre";
+    return "Générique ? " + when + " " + score + "\n" + sq.join("");
+  }
+  function copyText(txt, okMsg) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      toast(ok ? (okMsg || "Score copié") : "Copie impossible");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { toast(okMsg || "Score copié"); }, fallback);
+    } else fallback();
+  }
+
+  /* --------------------- réglage du début des extraits -------------------- */
+  var calib = false, cResetT = null;
+  function r1(x) { return Math.max(0, Math.round(x * 10) / 10); }
+  function setOff(d, x, input, row) {
+    x = r1(x);
+    offs[d.v] = x;
+    lsSet("gen-offsets", offs);
+    input.value = String(x).replace(".", ",");
+    row.classList.toggle("chg", x !== (d.s || 0));
+  }
+  function mkBtn(label, cls) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = label;
+    if (cls) b.className = cls;
+    return b;
+  }
+  function renderCalib() {
+    var box = $("calibList");
+    box.innerHTML = "";
+    DATA.forEach(function (d) {
+      var row = document.createElement("div"); row.className = "crow";
+      var name = document.createElement("div"); name.className = "cname"; name.textContent = d.n;
+      var ctl = document.createElement("div"); ctl.className = "cctl";
+      var input = document.createElement("input");
+      input.type = "text"; input.inputMode = "decimal"; input.className = "cval";
+      input.setAttribute("aria-label", "Début en secondes : " + d.n);
+      input.value = String(startOf(d)).replace(".", ",");
+      row.classList.toggle("chg", startOf(d) !== (d.s || 0));
+      input.addEventListener("change", function () {
+        var x = parseFloat(String(input.value).replace(",", "."));
+        if (isNaN(x)) x = startOf(d);
+        setOff(d, x, input, row);
+      });
+      [["−1", -1], ["−0,1", -0.1]].forEach(function (p) {
+        var b = mkBtn(p[0]);
+        b.addEventListener("click", function () { setOff(d, startOf(d) + p[1], input, row); playRange(d, 0.1, false); });
+        ctl.appendChild(b);
+      });
+      ctl.appendChild(input);
+      var u = document.createElement("span"); u.className = "cunit"; u.textContent = "s";
+      ctl.appendChild(u);
+      [["+0,1", 0.1], ["+1", 1]].forEach(function (p) {
+        var b = mkBtn(p[0]);
+        b.addEventListener("click", function () { setOff(d, startOf(d) + p[1], input, row); playRange(d, 0.1, false); });
+        ctl.appendChild(b);
+      });
+      var p1 = mkBtn("▶ 0,1 s", "cplay");
+      p1.addEventListener("click", function () { playRange(d, 0.1, false); });
+      var p3 = mkBtn("▶ 3 s", "cplay");
+      p3.addEventListener("click", function () { playRange(d, 3, false); });
+      ctl.appendChild(p1); ctl.appendChild(p3);
+      row.appendChild(name); row.appendChild(ctl);
+      box.appendChild(row);
+    });
+  }
+  function calibText() {
+    return DATA.map(function (d) { return d.n + " | " + d.v + " | s: " + startOf(d); }).join("\n");
+  }
+  function enterCalib() {
+    calib = true; stopPlayback(); setNotice("");
+    $("game").hidden = true; $("calib").hidden = false;
+    renderCalib();
+  }
+  function exitCalib() {
+    calib = false; stopPlayback();
+    $("calib").hidden = true; $("game").hidden = false;
+    loadedV = null; loadVideo(); render();
+  }
+
+  /* ----------------- mode Duel : 1v1 en ligne (PeerJS / WebRTC) ---------------- */
+  var D = null, dRounds = 10, dConnT = null;
+  var CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  function newCode() {
+    var s = "";
+    for (var i = 0; i < 5; i++) s += CODE_CHARS.charAt(Math.floor(Math.random() * CODE_CHARS.length));
+    return s;
+  }
+  function myName() {
+    var n = $("duelName").value.replace(/\s+/g, " ").trim().slice(0, 14) || "Joueur";
+    lsSet("gen-name", n);
+    return n;
+  }
+  function inviteLink() {
+    var base = /^https?:$/.test(location.protocol) ? location.origin + location.pathname : location.href.split("#")[0];
+    return base + "#duel-" + D.code;
+  }
+  function dSend(msg) { try { if (D && D.conn && D.conn.open) D.conn.send(msg); } catch (e) { /* ignoré */ } }
+  function dClose() {
+    clearTimeout(dConnT);
+    if (D) {
+      try { if (D.conn) D.conn.close(); } catch (e) { /* ignoré */ }
+      try { if (D.peer) D.peer.destroy(); } catch (e2) { /* ignoré */ }
+    }
+    D = null;
+  }
+  function leaveDuel() {
+    if (D) dSend({ t: "bye" });
+    stopPlayback();
+    dClose();
+    answer = null; over = false; guesses = []; step = 0;
+    $("dRoomBox").hidden = true; $("dCreate").hidden = false; $("dJoin").hidden = false;
+  }
+  function enterDuel() {
+    mode = "duel";
+    stopPlayback(); setNotice("");
+    if (!D) { $("dRoomBox").hidden = true; $("dCreate").hidden = false; $("dJoin").hidden = false; }
+    render();
+  }
+  function dFail(msg) {
+    toast(msg);
+    stopPlayback();
+    dClose();
+    $("dRoomBox").hidden = true; $("dCreate").hidden = false; $("dJoin").hidden = false;
+    render();
+  }
+  function dNewState(role, code, peer) {
+    return { role: role, code: code, peer: peer, conn: null, name: myName(), oppName: "", total: 10, order: [], r: 0,
+      rows: [], phase: "lobby", meDone: false, meReady: false, oppReady: false, meRematch: false, oppRematch: false, gone: false };
+  }
+  function dBind(conn) {
+    D.conn = conn;
+    conn.on("data", dOnData);
+    conn.on("close", function () { if (D && D.conn === conn) dOppGone(); });
+    conn.on("error", function () { if (D && D.conn === conn) dOppGone(); });
+  }
+  function dOppGone() {
+    if (!D || D.gone) return;
+    D.gone = true;
+    if (D.phase === "lobby") { dFail("L'adversaire s'est déconnecté."); return; }
+    stopPlayback();
+    D.phase = "final";
+    toast("L'adversaire a quitté la partie.");
+    render();
+  }
+  function dCreate() {
+    if (typeof window.Peer !== "function") { toast("Le mode Duel a besoin de la bibliothèque PeerJS (connexion internet)."); return; }
+    var attempts = 0;
+    function open() {
+      var code = newCode(), peer;
+      try { peer = new window.Peer("generique-" + code); } catch (e) { toast("Impossible de créer la salle."); return; }
+      D = dNewState("host", code, peer);
+      D.total = dRounds;
+      $("dCreate").hidden = true; $("dJoin").hidden = true; $("dRoomBox").hidden = false;
+      $("dRoomCode").textContent = "·····";
+      $("dWait").textContent = "Création de la salle…";
+      peer.on("open", function () {
+        if (!D || D.peer !== peer) return;
+        $("dRoomCode").textContent = code;
+        $("dWait").textContent = "En attente d'un adversaire…";
+      });
+      peer.on("connection", function (conn) {
+        if (!D || D.peer !== peer || D.conn) { try { conn.close(); } catch (e) { /* ignoré */ } return; }
+        dBind(conn);
+        $("dWait").textContent = "Adversaire connecté…";
+      });
+      peer.on("error", function (err) {
+        if (!D || D.peer !== peer) return;
+        if (err && err.type === "unavailable-id" && attempts++ < 5) { try { peer.destroy(); } catch (e) { /* ignoré */ } D = null; open(); return; }
+        if (D.phase === "lobby") dFail("Connexion impossible (" + ((err && err.type) || "erreur") + ").");
+      });
+      peer.on("disconnected", function () { try { if (D && D.peer === peer && !peer.destroyed) peer.reconnect(); } catch (e) { /* ignoré */ } });
+    }
+    open();
+    render();
+  }
+  function dJoin() {
+    var code = $("dCode").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (code.length !== 5) { toast("Le code fait 5 caractères."); return; }
+    if (typeof window.Peer !== "function") { toast("Le mode Duel a besoin de la bibliothèque PeerJS (connexion internet)."); return; }
+    var peer;
+    try { peer = new window.Peer(); } catch (e) { toast("Impossible de se connecter."); return; }
+    D = dNewState("guest", code, peer);
+    $("dCreate").hidden = true; $("dJoin").hidden = true; $("dRoomBox").hidden = false;
+    $("dRoomCode").textContent = code;
+    $("dWait").textContent = "Connexion à la salle…";
+    peer.on("open", function () {
+      if (!D || D.peer !== peer) return;
+      var conn = peer.connect("generique-" + code, { reliable: true });
+      dBind(conn);
+      conn.on("open", function () { if (D && D.conn === conn) dSend({ t: "hello", name: D.name, sig: SIG }); });
+      clearTimeout(dConnT);
+      dConnT = setTimeout(function () { if (D && D.phase === "lobby" && !D.gotStart) dFail("Salle introuvable ou injoignable."); }, 15000);
+    });
+    peer.on("error", function (err) {
+      if (!D || D.peer !== peer) return;
+      if (D.phase !== "lobby") return;
+      dFail(err && err.type === "peer-unavailable" ? "Salle introuvable : vérifie le code." : "Connexion impossible (" + ((err && err.type) || "erreur") + ").");
+    });
+    render();
+  }
+  function dOnData(m) {
+    if (!D || !m || typeof m !== "object") return;
+    if (m.t === "hello" && D.role === "host") {
+      if (m.sig !== SIG) { dSend({ t: "bad" }); dFail("L'adversaire n'a pas la même version du jeu."); return; }
+      D.oppName = String(m.name || "Joueur").slice(0, 14);
+      dHostStart();
+    } else if (m.t === "bad") {
+      dFail("Vous n'avez pas la même version du jeu.");
+    } else if (m.t === "start" && D.role === "guest") {
+      if (m.sig !== SIG || !Array.isArray(m.order) || !m.order.every(function (v) { return BYV[v]; })) { dFail("Vous n'avez pas la même version du jeu."); return; }
+      clearTimeout(dConnT);
+      D.gotStart = true;
+      D.oppName = String(m.name || "Joueur").slice(0, 14);
+      D.order = m.order; D.total = m.order.length;
+      dBegin();
+    } else if (m.t === "done" && m.r === D.r && D.rows[D.r]) {
+      D.rows[D.r].opp = Math.max(0, Math.min(6, m.p | 0));
+      render();
+    } else if (m.t === "next" && m.r === D.r) {
+      D.oppReady = true; dTryAdvance();
+    } else if (m.t === "void" && m.r === D.r) {
+      dVoid(true);
+    } else if (m.t === "rematch") {
+      D.oppRematch = true; dTryRematch(); render();
+    } else if (m.t === "bye") {
+      dOppGone();
+    }
+  }
+  function dHostStart() {
+    var ids = DATA.filter(function (d) { return !broken[d.v]; }).map(function (d) { return d.v; });
+    D.order = shuffle(ids).slice(0, D.total);
+    dSend({ t: "start", name: D.name, sig: SIG, order: D.order });
+    dBegin();
+  }
+  function dBegin() {
+    D.r = 0; D.rows = []; D.phase = "play";
+    D.meRematch = false; D.oppRematch = false;
+    dRound();
+  }
+  function dRound() {
+    D.meDone = false; D.meReady = false; D.oppReady = false;
+    D.rows[D.r] = { v: D.order[D.r], me: null, opp: null };
+    $("dRoomBox").hidden = true;
+    beginRound(BYV[D.order[D.r]]);
+  }
+  function dTotals() {
+    var a = 0, b = 0;
+    D.rows.forEach(function (r) { a += r.me || 0; b += r.opp || 0; });
+    return [a, b];
+  }
+  function duelSync() {   // appelé après chaque essai
+    if (!D || D.phase !== "play" || !over || D.meDone) return;
+    D.meDone = true;
+    var p = won ? STEPS.length + 1 - guesses.length : 0;
+    D.rows[D.r].me = p;
+    dSend({ t: "done", r: D.r, p: p });
+  }
+  function dTryAdvance() {
+    if (!D || D.phase !== "play" || !D.meReady || !D.oppReady) return;
+    stopPlayback();
+    if (D.r + 1 >= D.order.length) { D.phase = "final"; render(); return; }
+    D.r++;
+    dRound();
+  }
+  function duelNext() {
+    if (!D || !D.meDone || D.meReady) return;
+    D.meReady = true;
+    dSend({ t: "next", r: D.r });
+    dTryAdvance();
+    render();
+  }
+  function dVoid(fromPeer) {   // vidéo illisible : la manche est annulée pour les deux
+    if (!D || D.phase !== "play") return;
+    if (!fromPeer) dSend({ t: "void", r: D.r });
+    toast("Vidéo illisible : manche annulée.");
+    D.rows[D.r].me = 0; D.rows[D.r].opp = 0; D.rows[D.r].void = true;
+    D.meDone = true; D.meReady = true; D.oppReady = true;
+    dTryAdvance();
+  }
+  function dTryRematch() {
+    if (!D || D.gone || !D.meRematch || !D.oppRematch) return;
+    if (D.role === "host") dHostStart();
+  }
+  function duelRematch() {
+    if (!D || D.gone || D.meRematch) return;
+    D.meRematch = true;
+    dSend({ t: "rematch" });
+    dTryRematch();
+    render();
+  }
+  function renderDuel() {
+    var dl = mode === "duel";
+    var lobbyShow = dl && (!D || D.phase === "lobby");
+    var playing = dl && !!D && D.phase === "play";
+    var fin = dl && !!D && D.phase === "final";
+    $("lobby").hidden = !lobbyShow;
+    $("duelbar").hidden = !(playing || fin);
+    $("duelEnd").hidden = !fin;
+    $("share").hidden = dl;
+    $("ytlink").hidden = false;
+    if (lobbyShow || fin) { $("tv").hidden = true; $("history").hidden = true; $("guessForm").hidden = true; $("end").hidden = true; }
+    $("duelNote").hidden = true;
+    if (lobbyShow) {
+      if (D) {
+        $("dRoomBox").hidden = false;
+        $("dCreate").hidden = true; $("dJoin").hidden = true;
+        $("dRoomCode").textContent = D.code;
+        $("dCopy").hidden = D.role !== "host";
+      }
+      return;
+    }
+    if (!(playing || fin)) return;
+    var t = dTotals(), row = D.rows[D.r] || {};
+    $("dRound").textContent = fin ? "Terminé" : "Manche " + (D.r + 1) + " / " + D.order.length;
+    $("dRoom").textContent = "Salle " + D.code;
+    $("dMe").textContent = D.name;
+    $("dOpp").textContent = D.oppName;
+    $("dPts").textContent = t[0] + " – " + t[1];
+    function st(p, done) { return !done ? "" : p > 0 ? "Trouvé · +" + p : "Raté"; }
+    if (playing) {
+      $("dMeSt").textContent = D.meDone ? st(row.me, true) : "Écoute…";
+      $("dOppSt").textContent = row.opp !== null && row.opp !== undefined ? st(row.opp, true) : "Cherche…";
+      if (over) {
+        $("again").textContent = D.meReady ? "En attente…" : D.r + 1 >= D.order.length ? "Résultats" : "Suivant →";
+        $("again").disabled = D.meReady;
+        var n = $("duelNote");
+        n.hidden = false;
+        n.textContent = D.meReady ? "En attente de " + D.oppName + "…" : row.opp === null || row.opp === undefined ? D.oppName + " cherche encore. Tu peux passer à la suite, la manche se lance quand vous êtes prêts." : "";
+        if (!n.textContent) n.hidden = true;
+      }
+    } else {
+      $("dMeSt").textContent = ""; $("dOppSt").textContent = D.gone ? "A quitté" : "";
+      var win = t[0] > t[1], tie = t[0] === t[1];
+      var res = $("deRes");
+      res.className = "res " + (win ? "ok" : tie ? "" : "ko");
+      res.textContent = D.gone && D.rows.length < D.order.length ? "Partie interrompue" : win ? "Victoire" : tie ? "Égalité" : "Défaite";
+      $("deScore").textContent = t[0] + " – " + t[1];
+      $("deSub").textContent = D.name + " contre " + D.oppName + (D.gone ? " · l'adversaire a quitté" : "");
+      var ul = $("deRows");
+      ul.innerHTML = "";
+      var hd = document.createElement("li"); hd.className = "hd";
+      [["Générique", "t"], ["Toi", "p"], ["Adv.", "p"]].forEach(function (c) {
+        var s = document.createElement("span"); s.className = c[1]; s.textContent = c[0]; hd.appendChild(s);
+      });
+      ul.appendChild(hd);
+      D.rows.forEach(function (r) {
+        if (r.me === null && r.opp === null) return;
+        var li = document.createElement("li");
+        var a = document.createElement("span"); a.className = "t"; a.textContent = r.void ? (BYV[r.v] ? BYV[r.v].n : r.v) + " (annulée)" : BYV[r.v] ? BYV[r.v].n : r.v;
+        var b = document.createElement("span"); b.className = "p" + (r.me > r.opp ? " win" : ""); b.textContent = r.me === null ? "–" : r.me;
+        var c = document.createElement("span"); c.className = "p" + (r.opp > r.me ? " win" : ""); c.textContent = r.opp === null ? "–" : r.opp;
+        li.appendChild(a); li.appendChild(b); li.appendChild(c);
+        ul.appendChild(li);
+      });
+      var rb = $("deRematch");
+      rb.hidden = D.gone;
+      rb.disabled = D.meRematch;
+      rb.textContent = D.meRematch ? "En attente de " + D.oppName + "…" : D.oppRematch ? "Accepter la revanche" : "Revanche";
+    }
+  }
+
+  /* ------------------------------ événements ----------------------------- */
+  $("play").addEventListener("click", function () {
+    if (playing || armed) { stopPlayback(); return; }
+    startClip(false);
+  });
+  $("full").addEventListener("click", function () {
+    if ((playing || armed) && fullMode) { stopPlayback(); return; }
+    startClip(true);
+  });
+  $("q").addEventListener("input", updateList);
+  $("q").addEventListener("focus", function () { if ($("q").value && !selected) updateList(); });
+  $("q").addEventListener("blur", function () { setTimeout(closeList, 120); });
+  $("q").addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown") { e.preventDefault(); if ($("list").hidden) updateList(); moveActive(1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); moveActive(-1); }
+    else if (e.key === "Escape") { closeList(); }
+    else if (e.key === "Enter") {
+      if (!$("list").hidden && activeIdx >= 0) { e.preventDefault(); choose(activeIdx); }
+    }
+  });
+  $("guessForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (selected) submitGuess(selected);
+  });
+  $("skip").addEventListener("click", skip);
+  $("share").addEventListener("click", function () { copyText(shareText()); });
+  $("again").addEventListener("click", function () {
+    if (mode === "all") { nextAll(); return; }
+    if (mode === "duel") { duelNext(); return; }
+    mode = "free"; renderEras(); startFree();
+  });
+  function leaveTo(m, fn) { return function () { if (mode === m) return; if (mode === "duel") leaveDuel(); mode = m; fn(); }; }
+  $("mAll").addEventListener("click", leaveTo("all", startAll));
+  $("mDuel").addEventListener("click", function () { if (mode !== "duel") enterDuel(); });
+  $("dRounds").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("button") : null;
+    if (!b) return;
+    dRounds = +b.getAttribute("data-n");
+    Array.prototype.forEach.call($("dRounds").children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+  $("dCreateBtn").addEventListener("click", dCreate);
+  $("dJoinBtn").addEventListener("click", dJoin);
+  $("dCode").addEventListener("keydown", function (e) { if (e.key === "Enter") dJoin(); });
+  $("dCancel").addEventListener("click", function () { leaveDuel(); render(); });
+  $("dCopy").addEventListener("click", function () { if (D) copyText(inviteLink(), "Lien d'invitation copié"); });
+  $("deRematch").addEventListener("click", duelRematch);
+  $("deLeave").addEventListener("click", function () { leaveDuel(); render(); });
+  $("bilanShare").addEventListener("click", function () { copyText(shareText()); });
+  $("bilanAgain").addEventListener("click", restartAll);
+  var allResetT = null;
+  $("allReset").addEventListener("click", function () {
+    var b = $("allReset");
+    if (!allResetT) {
+      b.textContent = "Confirmer ?";
+      allResetT = setTimeout(function () { allResetT = null; b.textContent = "Recommencer le tour"; }, 3000);
+      return;
+    }
+    clearTimeout(allResetT); allResetT = null;
+    b.textContent = "Recommencer le tour";
+    restartAll();
+  });
+  $("mDaily").addEventListener("click", leaveTo("daily", startDaily));
+  $("mFree").addEventListener("click", leaveTo("free", function () { renderEras(); startFree(); }));
+  window.addEventListener("beforeunload", function () { if (D) dSend({ t: "bye" }); });
+
+  $("foot").innerHTML = NAMES.length + " dessins animés au programme. Pour en ajouter, complète la liste <code>DATA</code> dans le fichier.";
+  $("calibBtn").addEventListener("click", enterCalib);
+  $("cBack").addEventListener("click", exitCalib);
+  $("cCopy").addEventListener("click", function () { copyText(calibText(), "Valeurs copiées"); });
+  $("cReset").addEventListener("click", function () {
+    var b = $("cReset");
+    if (!cResetT) {
+      b.textContent = "Confirmer ?";
+      cResetT = setTimeout(function () { cResetT = null; b.textContent = "Tout remettre à zéro"; }, 3000);
+      return;
+    }
+    clearTimeout(cResetT); cResetT = null;
+    b.textContent = "Tout remettre à zéro";
+    offs = {}; lsSet("gen-offsets", offs);
+    renderCalib(); toast("Débuts remis à zéro");
+  });
+
+  renderEras();
+  startDaily();
+  var savedName = lsGet("gen-name");
+  if (typeof savedName === "string") $("duelName").value = savedName;
+  var hm = /^#duel-([A-Za-z0-9]{5})$/.exec(location.hash);
+  if (hm) { $("dCode").value = hm[1].toUpperCase(); enterDuel(); }
+  if (location.hash === "#calibrage") enterCalib();
+})();
+</script>
+</body>
+</html>
